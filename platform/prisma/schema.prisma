@@ -42,66 +42,66 @@ enum AutomationStatus {
 }
 
 model Lead {
-  id           String     @id @default(cuid())
-  phoneNumber  String     @unique
-  name         String?
-  business     String?
-  productCount Int?
-  budget       Float?
-  timeline     String?
-  features     String[]   @default([])
-  intent       LeadIntent @default(UNKNOWN)
+  id                String     @id @default(cuid())
+  phoneNumber       String     @unique
+  name              String?
+  business          String?
+  productCount      Int?
+  budget            Float?
+  timeline          String?
+  features          String[]   @default([])
+  intent            LeadIntent @default(UNKNOWN)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
-  calls            Call[]
-  callbacks        Callback[]
-  automationEvents AutomationEvent[]
+  calls             Call[]
+  callbacks         Callback[]
+  automationEvents  AutomationEvent[]
 
   @@index([intent])
   @@index([createdAt])
 }
 
 model Call {
-  id     String @id @default(cuid())
-  leadId String
+  id            String     @id @default(cuid())
+  leadId        String
 
-  status CallStatus @default(INITIATED)
+  status        CallStatus @default(INITIATED)
 
-  startedAt DateTime?
-  endedAt   DateTime?
+  startedAt     DateTime?
+  endedAt       DateTime?
 
-  transcript String?
-  summary    String?
+  transcript    String?
+  summary       String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead          Lead       @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
+  callbacks     Callback[]
   automationEvents AutomationEvent[]
-  callbacks        Callback[]
 
   @@index([leadId])
   @@index([createdAt])
 }
 
 model Callback {
-  id     String  @id @default(cuid())
-  leadId String
-  callId String?
+  id            String         @id @default(cuid())
+  leadId        String
+  callId        String?
 
-  scheduledAt DateTime
-  status      CallbackStatus @default(SCHEDULED)
+  scheduledAt   DateTime
+  status        CallbackStatus @default(SCHEDULED)
 
-  notes String?
+  notes         String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  lead Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  call Call? @relation(fields: [callId], references: [id], onDelete: SetNull)
+  lead          Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  call          Call?          @relation(fields: [callId], references: [id], onDelete: SetNull)
 
   @@index([leadId])
   @@index([scheduledAt])
@@ -109,24 +109,24 @@ model Callback {
 }
 
 model AutomationEvent {
-  id     String  @id @default(cuid())
-  leadId String
-  callId String?
+  id            String             @id @default(cuid())
+  leadId        String
+  callId        String?
 
-  type   AutomationType
-  status AutomationStatus @default(PENDING)
+  type          AutomationType
+  status        AutomationStatus   @default(PENDING)
 
-  payload      Json?
-  errorMessage String?
+  payload       Json?
+  errorMessage  String?
 
-  triggeredAt DateTime?
-  completedAt DateTime?
+  triggeredAt   DateTime?
+  completedAt   DateTime?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
-  lead Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  call Call? @relation(fields: [callId], references: [id], onDelete: SetNull)
+  lead          Lead               @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  call          Call?              @relation(fields: [callId], references: [id], onDelete: SetNull)
 
   @@index([leadId])
   @@index([callId])
@@ -134,3 +134,4 @@ model AutomationEvent {
   @@index([status])
   @@index([createdAt])
 }
+// aero_live_bLtnM9By23agAoqCUnQ2YpQP8ahu1clDd5QqcwCdEg4
