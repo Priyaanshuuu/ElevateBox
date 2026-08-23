@@ -28,6 +28,10 @@ function getRequiredFromAny(names: string[]): string {
   return value;
 }
 
+function getOptionalFromAny(names: string[]): string | undefined {
+  return getFirstEnv(names);
+}
+
 function resolveSttEndpoint(provider: string): string {
   if (provider === "openai") {
     return "https://api.openai.com/v1/audio/transcriptions";
@@ -58,4 +62,17 @@ export const config = {
 
   llmModel: getEnv("LLM_MODEL", "google/gemini-2.5-flash"),
   ttsModel: getEnv("TTS_MODEL", "fishaudio/s2.1-pro-free"),
+
+  ragEnabled: getEnv("RAG_ENABLED", "true").toLowerCase() !== "false",
+  ragTopK: Number.parseInt(getEnv("RAG_TOP_K", "3"), 10),
+  ragKnowledgeDir: getEnv("RAG_KNOWLEDGE_DIR", "../knowledge"),
+
+  databaseUrl: getEnv("DATABASE_URL", ""),
+  embeddingApiKey: getOptionalFromAny([
+    "EMBEDDING_API_KEY",
+    "EMBEDDING_GROQ_API_KEY",
+    "STT_API_KEY",
+  ]),
+  embeddingEndpoint: getEnv("EMBEDDING_ENDPOINT", "https://api.groq.com/openai/v1/embeddings"),
+  embeddingModel: getEnv("EMBEDDING_MODEL", "text-embedding-3-small"),
 };

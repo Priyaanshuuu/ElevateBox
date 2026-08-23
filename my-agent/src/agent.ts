@@ -13,8 +13,9 @@ import {
 } from "@livekit/rtc-node";
 import { buildSalesSystemPrompt } from "./prompts/sales.ts";
 import { createConversationState, updateConversationState } from "./conversation/state.ts";
+import { formatRagContext, PgVectorRag } from "./rag/index.ts";
 
-export function createAgent(room?: Room) {
+export function createAgent(room?: Room): voice.Agent {
   const stt = new WhisperSttEngine({
     apiKey: config.sttApiKey,
     model: config.sttModel,
@@ -30,6 +31,15 @@ export function createAgent(room?: Room) {
   const transcript = new TranscriptStore();
   const activeTrackReaders = new Map<string, ReadableStreamDefaultReader<AudioFrame>>();
   const conversationState = createConversationState();
+  const rag =
+    config.ragEnabled && config.databaseUrl && config.embeddingApiKey
+      ? new PgVectorRag({
+          databaseUrl: config.databaseUrl,
+          embeddingApiKey: config.embeddingApiKey,
+          embeddingEndpoint: config.embeddingEndpoint,
+          embeddingModel: config.embeddingModel,
+        })
+      : null;
 
   const salesAgent = new voice.Agent({
     instructions: buildSalesSystemPrompt(conversationState),
@@ -79,7 +89,21 @@ export function createAgent(room?: Room) {
     const nextState = updateConversationState(conversationState, normalized);
     Object.assign(conversationState, nextState);
 
-    await salesAgent.updateInstructions(buildSalesSystemPrompt(conversationState));
+    let ragContext = "";
+    if (rag) {
+      try {
+        const chunks = await rag.retrieve(normalized, config.ragTopK);
+        ragContext = formatRagContext(chunks);
+      } catch (error) {
+        console.error("RAG retrieval error:", error);
+      }
+    }
+
+    const instructions = ragContext
+      ? `${buildSalesSystemPrompt(conversationState)}\n\nUse the following factual reference context when relevant:\n${ragContext}`
+      : buildSalesSystemPrompt(conversationState);
+
+    await salesAgent.updateInstructions(instructions);
 
     session.generateReply({
       userInput: normalized,
@@ -175,7 +199,7 @@ export function createAgent(room?: Room) {
 
   if (!room) {
     console.log("STT pipeline is ready. Pass a LiveKit room to createAgent(room) to stream caller audio.");
-    return;
+    return salesAgent;
   }
 
   room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed);
@@ -192,6 +216,7 @@ export function createAgent(room?: Room) {
   }
 
   console.log("LiveKit audio track wiring enabled for STT.");
+  return salesAgent;
 }
 
 function pcm16ToWavBytes(samples: Int16Array, sampleRate: number, channels: number): Uint8Array {
