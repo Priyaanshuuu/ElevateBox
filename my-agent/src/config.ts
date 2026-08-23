@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-function requireEnv(name: string): string {
+function getRequiredEnv(name: string): string {
   const value = process.env[name];
 
   if (!value) {
@@ -11,7 +11,7 @@ function requireEnv(name: string): string {
 }
 
 export const config = {
-  livekitUrl: requireEnv("LIVEKIT_URL"),
-  livekitApiKey: requireEnv("LIVEKIT_API_KEY"),
-  livekitApiSecret: requireEnv("LIVEKIT_API_SECRET"),
+  livekitUrl: getRequiredEnv("LIVEKIT_URL"),
+  livekitApiKey: getRequiredEnv("LIVEKIT_API_KEY"),
+  livekitApiSecret: getRequiredEnv("LIVEKIT_API_SECRET"),
 };

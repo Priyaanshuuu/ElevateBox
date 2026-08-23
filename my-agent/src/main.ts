@@ -1,5 +1,5 @@
-import { config } from "./config.js";
-import { createAgent } from "./agent.js";
+import { config } from "./config.ts";
+import { createAgent } from "./agent.ts";
 
 console.log("Starting Voice Sales Agent...");
 console.log(`LiveKit server: ${config.livekitUrl}`);
