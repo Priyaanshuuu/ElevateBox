@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -10,4 +5,131 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum LeadIntent {
+  HOT
+  WARM
+  COLD
+  UNKNOWN
+}
+
+enum CallStatus {
+  INITIATED
+  RINGING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum CallbackStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum AutomationType {
+  INTERESTED_LEAD_WHATSAPP
+  CALLBACK
+}
+
+enum AutomationStatus {
+  PENDING
+  TRIGGERED
+  COMPLETED
+  FAILED
+}
+
+model Lead {
+  id                String     @id @default(cuid())
+  phoneNumber       String     @unique
+  name              String?
+  business          String?
+  productCount      Int?
+  budget            Float?
+  timeline          String?
+  features          String[]   @default([])
+  intent            LeadIntent @default(UNKNOWN)
+
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  calls             Call[]
+  callbacks         Callback[]
+  automationEvents  AutomationEvent[]
+
+  @@index([intent])
+  @@index([createdAt])
+}
+
+model Call {
+  id            String     @id @default(cuid())
+  leadId        String
+
+  status        CallStatus  @default(INITIATED)
+
+  startedAt     DateTime?
+  endedAt       DateTime?
+
+  transcript    String?
+  summary       String?
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  lead          Lead       @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  automationEvents AutomationEvent[]
+
+  @@index([leadId])
+  @@index([createdAt])
+}
+
+model Callback {
+  id            String         @id @default(cuid())
+  leadId        String
+  callId        String?
+
+  scheduledAt   DateTime
+  status        CallbackStatus @default(SCHEDULED)
+
+  notes         String?
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  lead          Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  call          Call?          @relation(fields: [callId], references: [id], onDelete: SetNull)
+
+  @@index([leadId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+model AutomationEvent {
+  id            String             @id @default(cuid())
+  leadId        String
+  callId        String?
+
+  type          AutomationType
+  status        AutomationStatus   @default(PENDING)
+
+  payload       Json?
+  errorMessage  String?
+
+  triggeredAt   DateTime?
+  completedAt   DateTime?
+
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  lead          Lead               @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  call          Call?              @relation(fields: [callId], references: [id], onDelete: SetNull)
+
+  @@index([leadId])
+  @@index([callId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
 }
