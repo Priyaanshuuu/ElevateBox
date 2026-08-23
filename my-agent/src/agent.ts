@@ -12,8 +12,9 @@ import {
 
 export function createAgent(room?: Room) {
   const stt = new WhisperSttEngine({
-    apiKey: config.sttOpenAiApiKey,
+    apiKey: config.sttApiKey,
     model: config.sttModel,
+    endpoint: config.sttEndpoint,
   });
 
   const chunker = new PcmChunker({

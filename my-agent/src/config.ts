@@ -10,13 +10,49 @@ function getEnv(name: string, fallback: string): string {
   return process.env[name] ?? fallback;
 }
 
+function getFirstEnv(names: string[]): string | undefined {
+  for (const name of names) {
+    const value = process.env[name];
+    if (value) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
+function getRequiredFromAny(names: string[]): string {
+  const value = getFirstEnv(names);
+  if (!value) {
+    throw new Error("Missing required environment variable. Set one of: " + names.join(", "));
+  }
+  return value;
+}
+
+function resolveSttEndpoint(provider: string): string {
+  if (provider === "openai") {
+    return "https://api.openai.com/v1/audio/transcriptions";
+  }
+  // Groq provides an OpenAI-compatible audio transcription endpoint.
+  return "https://api.groq.com/openai/v1/audio/transcriptions";
+}
+
+function resolveSttModel(provider: string): string {
+  if (provider === "openai") {
+    return "whisper-1";
+  }
+  return "whisper-large-v3-turbo";
+}
+
+const sttProvider = getEnv("STT_PROVIDER", "groq").toLowerCase();
+
 export const config = {
   livekitUrl: getRequiredEnv("LIVEKIT_URL"),
   livekitApiKey: getRequiredEnv("LIVEKIT_API_KEY"),
   livekitApiSecret: getRequiredEnv("LIVEKIT_API_SECRET"),
 
-  sttProvider: getEnv("STT_PROVIDER", "whisper"),
-  sttOpenAiApiKey: getRequiredEnv("STT_OPENAI_API_KEY"),
-  sttModel: getEnv("STT_MODEL", "whisper-1"),
+  sttProvider,
+  sttApiKey: getRequiredFromAny(["STT_API_KEY", "STT_GROQ_API_KEY", "STT_OPENAI_API_KEY"]),
+  sttEndpoint: getEnv("STT_ENDPOINT", resolveSttEndpoint(sttProvider)),
+  sttModel: getEnv("STT_MODEL", resolveSttModel(sttProvider)),
   sttLanguage: getEnv("STT_LANGUAGE", "auto"),
 };

@@ -1,9 +1,21 @@
-import { config } from "./config.ts";
+import { fileURLToPath } from "node:url";
+import { AutoSubscribe, cli, defineAgent, type JobContext, WorkerOptions } from "@livekit/agents";
+import { RoomEvent } from "@livekit/rtc-node";
 import { createAgent } from "./agent.ts";
 
-console.log("Starting Voice Sales Agent...");
-console.log(`LiveKit server: ${config.livekitUrl}`);
+export default defineAgent({
+	entry: async (ctx: JobContext) => {
+		await ctx.connect(undefined, AutoSubscribe.AUDIO_ONLY);
+		createAgent(ctx.room);
 
-createAgent();
+		await ctx.waitForParticipant();
 
-console.log("Voice Sales Agent is running.");
+		await new Promise<void>((resolve) => {
+			ctx.room.once(RoomEvent.Disconnected, () => resolve());
+		});
+	},
+});
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+	cli.runApp(new WorkerOptions({ agent: fileURLToPath(import.meta.url) }));
+}
