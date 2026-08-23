@@ -55,4 +55,7 @@ export const config = {
   sttEndpoint: getEnv("STT_ENDPOINT", resolveSttEndpoint(sttProvider)),
   sttModel: getEnv("STT_MODEL", resolveSttModel(sttProvider)),
   sttLanguage: getEnv("STT_LANGUAGE", "auto"),
+
+  llmModel: getEnv("LLM_MODEL", "google/gemini-2.5-flash"),
+  ttsModel: getEnv("TTS_MODEL", "fishaudio/s2.1-pro-free"),
 };

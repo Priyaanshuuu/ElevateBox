@@ -1,7 +1,9 @@
 import { config } from "./config.ts";
 import { WhisperSttEngine, PcmChunker, TranscriptStore } from "./stt/index.ts";
+import { voice } from "@livekit/agents";
 import {
   AudioStream,
+  type AudioFrame,
   type RemoteParticipant,
   type RemoteTrack,
   RemoteAudioTrack,
@@ -9,6 +11,8 @@ import {
   RoomEvent,
   type Room,
 } from "@livekit/rtc-node";
+import { buildSalesSystemPrompt } from "./prompts/sales.ts";
+import { createConversationState, updateConversationState } from "./conversation/state.ts";
 
 export function createAgent(room?: Room) {
   const stt = new WhisperSttEngine({
@@ -24,9 +28,64 @@ export function createAgent(room?: Room) {
   });
 
   const transcript = new TranscriptStore();
-  const activeTrackReaders = new Map<string, ReadableStreamDefaultReader<any>>();
+  const activeTrackReaders = new Map<string, ReadableStreamDefaultReader<AudioFrame>>();
+  const conversationState = createConversationState();
+
+  const salesAgent = new voice.Agent({
+    instructions: buildSalesSystemPrompt(conversationState),
+    llm: config.llmModel,
+    tts: config.ttsModel,
+    // STT is handled by the existing custom STT pipeline in this file.
+    stt: null,
+    vad: null,
+  });
+
+  const session = new voice.AgentSession({
+    turnHandling: {
+      turnDetection: "manual",
+    },
+  });
+
+  let sessionStarted = false;
+  let lastHandledTranscript = "";
 
   console.log("Voice Sales Agent initialized with STT");
+
+  async function ensureSessionStarted(currentRoom: Room): Promise<void> {
+    if (sessionStarted) {
+      return;
+    }
+
+    await session.start({
+      agent: salesAgent,
+      room: currentRoom,
+    });
+
+    sessionStarted = true;
+    console.log("Sales LLM + TTS session started.");
+  }
+
+  async function handleUserTranscript(text: string): Promise<void> {
+    const normalized = text.trim();
+    if (!normalized) {
+      return;
+    }
+    if (normalized.toLowerCase() === lastHandledTranscript.toLowerCase()) {
+      return;
+    }
+
+    lastHandledTranscript = normalized;
+
+    const nextState = updateConversationState(conversationState, normalized);
+    Object.assign(conversationState, nextState);
+
+    await salesAgent.updateInstructions(buildSalesSystemPrompt(conversationState));
+
+    session.generateReply({
+      userInput: normalized,
+      inputModality: "audio",
+    });
+  }
 
   async function onIncomingPcm16Frame(frame: Int16Array) {
     const chunks = chunker.pushPcm16(frame);
@@ -38,6 +97,7 @@ export function createAgent(room?: Room) {
       });
       transcript.add(segment);
       console.log("STT:", segment.text);
+      await handleUserTranscript(segment.text);
     }
   }
 
@@ -73,6 +133,10 @@ export function createAgent(room?: Room) {
 
     void (async () => {
       try {
+        if (room) {
+          await ensureSessionStarted(room);
+        }
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) {

@@ -5,7 +5,9 @@ import { createAgent } from "./agent.ts";
 
 export default defineAgent({
 	entry: async (ctx: JobContext) => {
+		console.log("Job entry started.");
 		await ctx.connect(undefined, AutoSubscribe.AUDIO_ONLY);
+		console.log("Connected to room.");
 		createAgent(ctx.room);
 
 		await ctx.waitForParticipant();
@@ -17,5 +19,10 @@ export default defineAgent({
 });
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-	cli.runApp(new WorkerOptions({ agent: fileURLToPath(import.meta.url) }));
+	cli.runApp(
+		new WorkerOptions({
+			agent: fileURLToPath(import.meta.url),
+			initializeProcessTimeout: 30_000,
+		}),
+	);
 }
