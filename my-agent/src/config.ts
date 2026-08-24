@@ -76,6 +76,9 @@ export const config = {
   embeddingEndpoint: getEnv("EMBEDDING_ENDPOINT", "https://api.groq.com/openai/v1/embeddings"),
   embeddingModel: getEnv("EMBEDDING_MODEL", "text-embedding-3-small"),
 
+  callbackTimezone: getEnv("CALLBACK_TIMEZONE", ""),
+  callbackDefaultHour: Number.parseInt(getEnv("CALLBACK_DEFAULT_HOUR", "10"), 10),
+
   whatsappProvider: getEnv("WHATSAPP_PROVIDER", "disabled") as "disabled" | "twilio",
   whatsappTwilioAccountSid: getEnv("TWILIO_ACCOUNT_SID", ""),
   whatsappTwilioAuthToken: getEnv("TWILIO_AUTH_TOKEN", ""),

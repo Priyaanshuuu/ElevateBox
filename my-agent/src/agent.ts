@@ -23,6 +23,7 @@ import {
   startCall,
 } from "../../platform/lib/services/call.service.ts";
 import { HotLeadWhatsAppTool } from "./automation/whatsapp.ts";
+import { CallbackTool } from "./automation/callback.ts";
 
 export function createAgent(room?: Room): voice.Agent {
   const stt = new WhisperSttEngine({
@@ -59,6 +60,12 @@ export function createAgent(room?: Room): voice.Agent {
     vad: null,
   });
 
+  function isCallbackRequest(text: string): boolean {
+    return /\b(?:call| ring|phone)\b.*\b(?:back|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d{1,2}\s*(?:am|pm))\b/i.test(
+      text,
+    ) || /\b(?:call me|ring me|phone me)\b/i.test(text);
+  }
+
   const session = new voice.AgentSession({
     turnHandling: {
       turnDetection: "manual",
@@ -72,6 +79,7 @@ export function createAgent(room?: Room): voice.Agent {
   let activeCallId: string | null = null;
   let lastPersistedIntent: LeadIntent = LeadIntent.UNKNOWN;
   let hotWhatsAppTriggered = false;
+  let callbackHandledForTranscript = "";
 
   const whatsappTool = new HotLeadWhatsAppTool({
     provider: config.whatsappProvider,
@@ -79,6 +87,7 @@ export function createAgent(room?: Room): voice.Agent {
     ...(config.whatsappTwilioAuthToken ? { twilioAuthToken: config.whatsappTwilioAuthToken } : {}),
     ...(config.whatsappTwilioFrom ? { twilioWhatsAppFrom: config.whatsappTwilioFrom } : {}),
   });
+  const callbackTool = new CallbackTool();
 
   console.log("Voice Sales Agent initialized with STT");
 
@@ -106,6 +115,31 @@ export function createAgent(room?: Room): voice.Agent {
     }
 
     lastHandledTranscript = normalized;
+
+    if (isCallbackRequest(normalized) && callbackHandledForTranscript !== normalized) {
+      callbackHandledForTranscript = normalized;
+      if (activeLeadId && config.callbackTimezone) {
+        try {
+          const result = await callbackTool.schedule({
+            leadId: activeLeadId,
+            ...(activeCallId ? { callId: activeCallId } : {}),
+            requestText: normalized,
+            timezone: config.callbackTimezone,
+            defaultHour: config.callbackDefaultHour,
+            notes: `Requested during call: ${normalized}`,
+          });
+          if (result.status === "scheduled") {
+            console.log(`Callback scheduled for ${result.scheduledAt.toISOString()}.`);
+          } else {
+            console.log(`Callback needs clarification: ${result.reason}`);
+          }
+        } catch (error) {
+          console.error("Callback scheduling error:", error);
+        }
+      } else {
+        console.log("Callback scheduling requires CALLBACK_TIMEZONE and an active lead.");
+      }
+    }
 
     const nextState = updateConversationState(conversationState, normalized);
     Object.assign(conversationState, nextState);
