@@ -1,0 +1,7 @@
+/* eslint-disable react-hooks/error-boundaries */
+import { DashboardShell, EmptyState, ErrorState, SectionHeading, StatusBadge, formatDate } from "../components/dashboard-shell";
+import { getCallbacks } from "../../lib/dashboard";
+
+export default async function CallbacksPage() {
+  try { const callbacks = await getCallbacks(); return <DashboardShell active="Callbacks" eyebrow="Follow-up queue" title="Callbacks" description="Scheduled customer follow-ups waiting for the next integration step."><section className="content-section"><SectionHeading title="Callback queue" count={callbacks.length} /><div className="table-wrap"><table><thead><tr><th>Scheduled for</th><th>Lead</th><th>Status</th><th>Originating call</th><th>Notes</th></tr></thead><tbody>{callbacks.map((callback) => <tr key={callback.id}><td><strong>{formatDate(callback.scheduledAt)}</strong></td><td>{callback.lead.name || callback.lead.phoneNumber}<small>{callback.lead.phoneNumber}</small></td><td><StatusBadge value={callback.status} /></td><td>{callback.callId ? <span className="mono">{callback.callId.slice(-8)}</span> : "—"}</td><td className="truncate">{callback.notes || "—"}</td></tr>)}</tbody></table>{callbacks.length === 0 && <EmptyState message="No callbacks are scheduled." />}</div></section></DashboardShell>; } catch { return <DashboardShell active="Callbacks" eyebrow="Follow-up queue" title="Callbacks unavailable" description="The platform could not read callback data."><ErrorState /></DashboardShell>; }
+}

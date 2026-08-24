@@ -1,0 +1,7 @@
+/* eslint-disable react-hooks/error-boundaries */
+import { DashboardShell, EmptyState, ErrorState, SectionHeading, StatusBadge, formatDate } from "../components/dashboard-shell";
+import { getLeads } from "../../lib/dashboard";
+
+export default async function LeadsPage() {
+  try { const leads = await getLeads(); return <DashboardShell active="Leads" eyebrow="Customer pipeline" title="Leads" description="Qualification signals captured across every conversation."><section className="content-section"><SectionHeading title="All leads" count={leads.length} /><div className="table-wrap"><table><thead><tr><th>Customer</th><th>Intent</th><th>Business</th><th>Qualification</th><th>Updated</th></tr></thead><tbody>{leads.map((lead) => <tr key={lead.id}><td><strong>{lead.name || "Unnamed lead"}</strong><small>{lead.phoneNumber}</small></td><td><StatusBadge value={lead.intent} /></td><td>{lead.business || "—"}</td><td className="qualify">{lead.productCount ? `${lead.productCount} products` : ""}{lead.budget ? ` · ${lead.budget}` : ""}{lead.timeline ? ` · ${lead.timeline}` : ""}{!lead.productCount && !lead.budget && !lead.timeline ? "No qualification data" : ""}</td><td>{formatDate(lead.updatedAt)}</td></tr>)}</tbody></table>{leads.length === 0 && <EmptyState message="No leads have been recorded yet." />}</div></section></DashboardShell>; } catch { return <DashboardShell active="Leads" eyebrow="Customer pipeline" title="Leads unavailable" description="The platform could not read lead data."><ErrorState /></DashboardShell>; }
+}

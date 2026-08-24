@@ -1,0 +1,8 @@
+/* eslint-disable react-hooks/error-boundaries */
+import Link from "next/link";
+import { DashboardShell, EmptyState, ErrorState, SectionHeading, StatusBadge, formatDate } from "../components/dashboard-shell";
+import { getCalls } from "../../lib/dashboard";
+
+export default async function CallsPage() {
+  try { const calls = await getCalls(); return <DashboardShell active="Calls" eyebrow="Conversation history" title="Calls" description="Review every conversation and the outcome it produced."><section className="content-section"><SectionHeading title="All calls" count={calls.length} /><div className="table-wrap"><table><thead><tr><th>Lead</th><th>Status</th><th>Started</th><th>Ended</th><th>Summary</th><th /></tr></thead><tbody>{calls.map((call) => <tr key={call.id}><td><strong>{call.lead.name || "Unnamed lead"}</strong><small>{call.lead.phoneNumber}</small></td><td><StatusBadge value={call.status} /></td><td>{formatDate(call.startedAt)}</td><td>{formatDate(call.endedAt)}</td><td className="truncate">{call.summary || "Summary pending"}</td><td><Link className="detail-link" href={`/calls/${call.id}`}>Open →</Link></td></tr>)}</tbody></table>{calls.length === 0 && <EmptyState message="No calls have been recorded yet." />}</div></section></DashboardShell>; } catch { return <DashboardShell active="Calls" eyebrow="Conversation history" title="Calls unavailable" description="The platform could not read call data."><ErrorState /></DashboardShell>; }
+}

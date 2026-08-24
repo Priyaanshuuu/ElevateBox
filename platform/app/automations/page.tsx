@@ -1,0 +1,7 @@
+/* eslint-disable react-hooks/error-boundaries */
+import { DashboardShell, EmptyState, ErrorState, SectionHeading, StatusBadge, formatDate } from "../components/dashboard-shell";
+import { getAutomationEvents } from "../../lib/dashboard";
+
+export default async function AutomationsPage() {
+  try { const events = await getAutomationEvents(); return <DashboardShell active="Automations" eyebrow="Workflow activity" title="Automations" description="Outbound actions initiated by the voice agent during live calls."><section className="content-section"><SectionHeading title="Event log" count={events.length} /><div className="table-wrap"><table><thead><tr><th>Event</th><th>Status</th><th>Lead</th><th>Call</th><th>Created</th><th>Completed</th></tr></thead><tbody>{events.map((event) => <tr key={event.id}><td><strong>{event.type.replaceAll("_", " ")}</strong>{event.errorMessage && <small className="error-text">{event.errorMessage}</small>}</td><td><StatusBadge value={event.status} /></td><td>{event.lead.name || event.lead.phoneNumber}</td><td>{event.callId ? <span className="mono">{event.callId.slice(-8)}</span> : "—"}</td><td>{formatDate(event.createdAt)}</td><td>{formatDate(event.completedAt)}</td></tr>)}</tbody></table>{events.length === 0 && <EmptyState message="No automation events have been recorded." />}</div></section></DashboardShell>; } catch { return <DashboardShell active="Automations" eyebrow="Workflow activity" title="Automations unavailable" description="The platform could not read automation data."><ErrorState /></DashboardShell>; }
+}
