@@ -11,9 +11,10 @@
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "rag:ingest": "node src/rag/ingest.ts",
-    "dev": "node src/main.ts dev",
-    "start": "node src/main.ts start"
+    "rag:ingest": "tsx src/rag/ingest.ts",
+    "dev": "tsx src/main.ts dev",
+    "start": "tsx src/main.ts start",
+    "callback:worker": "tsx src/callback-worker.ts"
   },
   "engines": {
     "node": ">=24.0.0",
@@ -21,9 +22,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
-    "@types/pg": "^8.15.6",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/node": "^24.10.1",
+    "@types/pg": "^8.15.6",
     "eslint": "^9.39.4",
     "globals": "^16.5.0",
     "jiti": "^2.6.1",
@@ -36,7 +37,9 @@
     "@livekit/plugins-ai-coustics": "^0.2.14",
     "@livekit/rtc-node": "^0.13.31",
     "dotenv": "^17.4.1",
+    "livekit-server-sdk": "^2.18.0",
     "pg": "^8.16.3",
+    "tsx": "^4.23.12",
     "zod": "^4.4.3"
   }
 }

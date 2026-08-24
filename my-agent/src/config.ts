@@ -78,6 +78,9 @@ export const config = {
 
   callbackTimezone: getEnv("CALLBACK_TIMEZONE", ""),
   callbackDefaultHour: Number.parseInt(getEnv("CALLBACK_DEFAULT_HOUR", "10"), 10),
+  livekitAgentName: getEnv("LIVEKIT_AGENT_NAME", "voice-sales-agent"),
+  livekitOutboundTrunkId: getEnv("LIVEKIT_OUTBOUND_TRUNK_ID", ""),
+  callbackPollIntervalMs: Number.parseInt(getEnv("CALLBACK_POLL_INTERVAL_MS", "30000"), 10),
 
   whatsappProvider: getEnv("WHATSAPP_PROVIDER", "disabled") as "disabled" | "twilio",
   whatsappTwilioAccountSid: getEnv("TWILIO_ACCOUNT_SID", ""),

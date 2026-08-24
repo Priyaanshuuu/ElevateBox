@@ -22,6 +22,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 	cli.runApp(
 		new WorkerOptions({
 			agent: fileURLToPath(import.meta.url),
+			agentName: process.env.LIVEKIT_AGENT_NAME ?? "voice-sales-agent",
 			initializeProcessTimeout: 30_000,
 		}),
 	);
