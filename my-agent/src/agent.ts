@@ -17,6 +17,12 @@ import { formatRagContext, PgVectorRag } from "./rag/index.ts";
 import { classifyLeadIntent } from "./intent/classifier.ts";
 import { getOrCreateLeadForIdentity, persistLeadIntent } from "./intent/persistence.ts";
 import { LeadIntent } from "../../platform/generated/prisma/enums.ts";
+import {
+  completeCall,
+  createCall,
+  startCall,
+} from "../../platform/lib/services/call.service.ts";
+import { HotLeadWhatsAppTool } from "./automation/whatsapp.ts";
 
 export function createAgent(room?: Room): voice.Agent {
   const stt = new WhisperSttEngine({
@@ -62,7 +68,16 @@ export function createAgent(room?: Room): voice.Agent {
   let sessionStarted = false;
   let lastHandledTranscript = "";
   let activeLeadId: string | null = null;
+  let activeLeadPhone: string | null = null;
+  let activeCallId: string | null = null;
   let lastPersistedIntent: LeadIntent = LeadIntent.UNKNOWN;
+  let hotWhatsAppTriggered = false;
+
+  const whatsappTool = new HotLeadWhatsAppTool({
+    provider: config.whatsappProvider,
+    ...(config.whatsappMetaPhoneNumberId ? { metaPhoneNumberId: config.whatsappMetaPhoneNumberId } : {}),
+    ...(config.whatsappMetaAccessToken ? { metaAccessToken: config.whatsappMetaAccessToken } : {}),
+  });
 
   console.log("Voice Sales Agent initialized with STT");
 
@@ -104,6 +119,22 @@ export function createAgent(room?: Room): voice.Agent {
         } catch (error) {
           console.error("Lead intent persistence error:", error);
         }
+      }
+
+      if (
+        nextIntent === LeadIntent.HOT &&
+        !hotWhatsAppTriggered &&
+        activeLeadId &&
+        activeLeadPhone
+      ) {
+        hotWhatsAppTriggered = true;
+        const contextText = buildCurrentCallContext(transcript.fullText(), normalized);
+        void triggerHotLeadWhatsApp({
+          leadId: activeLeadId,
+          ...(activeCallId ? { callId: activeCallId } : {}),
+          toPhoneNumber: activeLeadPhone,
+          contextText,
+        });
       }
     }
 
@@ -180,9 +211,17 @@ export function createAgent(room?: Room): voice.Agent {
             const lead = await getOrCreateLeadForIdentity(participant.identity);
             if (lead) {
               activeLeadId = lead.id;
+              activeLeadPhone = lead.phoneNumber;
               console.log(`Lead resolved for intent tracking: ${lead.phoneNumber}`);
               if (lastPersistedIntent !== LeadIntent.UNKNOWN) {
                 await persistLeadIntent(activeLeadId, lastPersistedIntent);
+              }
+
+              if (!activeCallId) {
+                const call = await createCall(activeLeadId);
+                activeCallId = call.id;
+                await startCall(activeCallId);
+                console.log(`Call tracking started: ${activeCallId}`);
               }
             }
           } catch (error) {
@@ -206,8 +245,38 @@ export function createAgent(room?: Room): voice.Agent {
       } finally {
         activeTrackReaders.delete(key);
         void reader.cancel();
+
+        if (activeCallId) {
+          try {
+            await completeCall(activeCallId, transcript.fullText());
+          } catch (error) {
+            console.error("Call completion error:", error);
+          }
+        }
       }
     })();
+  }
+
+  async function triggerHotLeadWhatsApp(input: {
+    leadId: string;
+    callId?: string;
+    toPhoneNumber: string;
+    contextText: string;
+  }): Promise<void> {
+    try {
+      const result = await whatsappTool.trigger({
+        ...input,
+        resumeTextOrUrl: config.myResumeTextOrUrl,
+        myPhoneNumber: config.myPhoneNumber,
+      });
+      if (result === "skipped-duplicate") {
+        console.log("WhatsApp automation skipped (duplicate event).");
+      } else {
+        console.log("WhatsApp automation triggered for HOT lead.");
+      }
+    } catch (error) {
+      console.error("WhatsApp automation error:", error);
+    }
   }
 
   function handleTrackSubscribed(
@@ -291,4 +360,15 @@ function writeAscii(view: DataView, offset: number, value: string): void {
   for (let i = 0; i < value.length; i++) {
     view.setUint8(offset + i, value.charCodeAt(i));
   }
+}
+
+function buildCurrentCallContext(fullTranscript: string, latestUtterance: string): string {
+  const merged = [fullTranscript, latestUtterance].filter(Boolean).join(" ").trim();
+  if (!merged) {
+    return "No transcript context available yet.";
+  }
+  if (merged.length <= 900) {
+    return merged;
+  }
+  return merged.slice(merged.length - 900);
 }

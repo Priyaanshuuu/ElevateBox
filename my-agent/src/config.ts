@@ -75,4 +75,10 @@ export const config = {
   ]),
   embeddingEndpoint: getEnv("EMBEDDING_ENDPOINT", "https://api.groq.com/openai/v1/embeddings"),
   embeddingModel: getEnv("EMBEDDING_MODEL", "text-embedding-3-small"),
+
+  whatsappProvider: getEnv("WHATSAPP_PROVIDER", "disabled") as "disabled" | "meta",
+  whatsappMetaPhoneNumberId: getEnv("WHATSAPP_META_PHONE_NUMBER_ID", ""),
+  whatsappMetaAccessToken: getEnv("WHATSAPP_META_ACCESS_TOKEN", ""),
+  myResumeTextOrUrl: getEnv("MY_RESUME_TEXT_OR_URL", ""),
+  myPhoneNumber: getEnv("MY_PHONE_NUMBER", ""),
 };
