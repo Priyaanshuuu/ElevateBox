@@ -48,8 +48,8 @@ export async function completeCall(
     data: {
       status: CallStatus.COMPLETED,
       endedAt: new Date(),
-      transcript,
-      summary,
+      ...(transcript !== undefined ? { transcript } : {}),
+      ...(summary !== undefined ? { summary } : {}),
     },
   });
 }
