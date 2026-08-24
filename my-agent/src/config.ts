@@ -76,9 +76,10 @@ export const config = {
   embeddingEndpoint: getEnv("EMBEDDING_ENDPOINT", "https://api.groq.com/openai/v1/embeddings"),
   embeddingModel: getEnv("EMBEDDING_MODEL", "text-embedding-3-small"),
 
-  whatsappProvider: getEnv("WHATSAPP_PROVIDER", "disabled") as "disabled" | "meta",
-  whatsappMetaPhoneNumberId: getEnv("WHATSAPP_META_PHONE_NUMBER_ID", ""),
-  whatsappMetaAccessToken: getEnv("WHATSAPP_META_ACCESS_TOKEN", ""),
+  whatsappProvider: getEnv("WHATSAPP_PROVIDER", "disabled") as "disabled" | "twilio",
+  whatsappTwilioAccountSid: getEnv("TWILIO_ACCOUNT_SID", ""),
+  whatsappTwilioAuthToken: getEnv("TWILIO_AUTH_TOKEN", ""),
+  whatsappTwilioFrom: getEnv("TWILIO_WHATSAPP_FROM", ""),
   myResumeTextOrUrl: getEnv("MY_RESUME_TEXT_OR_URL", ""),
   myPhoneNumber: getEnv("MY_PHONE_NUMBER", ""),
 };

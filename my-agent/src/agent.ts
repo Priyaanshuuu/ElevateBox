@@ -75,8 +75,9 @@ export function createAgent(room?: Room): voice.Agent {
 
   const whatsappTool = new HotLeadWhatsAppTool({
     provider: config.whatsappProvider,
-    ...(config.whatsappMetaPhoneNumberId ? { metaPhoneNumberId: config.whatsappMetaPhoneNumberId } : {}),
-    ...(config.whatsappMetaAccessToken ? { metaAccessToken: config.whatsappMetaAccessToken } : {}),
+    ...(config.whatsappTwilioAccountSid ? { twilioAccountSid: config.whatsappTwilioAccountSid } : {}),
+    ...(config.whatsappTwilioAuthToken ? { twilioAuthToken: config.whatsappTwilioAuthToken } : {}),
+    ...(config.whatsappTwilioFrom ? { twilioWhatsAppFrom: config.whatsappTwilioFrom } : {}),
   });
 
   console.log("Voice Sales Agent initialized with STT");

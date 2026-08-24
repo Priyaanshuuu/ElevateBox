@@ -6,12 +6,13 @@ import {
   markAutomationEventTriggered,
 } from "../../../platform/lib/services/automation.service.ts";
 
-export type WhatsAppProviderKind = "disabled" | "meta";
+export type WhatsAppProviderKind = "disabled" | "twilio";
 
 export interface WhatsAppToolConfig {
   provider: WhatsAppProviderKind;
-  metaPhoneNumberId?: string;
-  metaAccessToken?: string;
+  twilioAccountSid?: string;
+  twilioAuthToken?: string;
+  twilioWhatsAppFrom?: string;
 }
 
 export interface TriggerHotLeadWhatsAppInput {
@@ -37,32 +38,32 @@ class DisabledWhatsAppProvider implements WhatsAppProvider {
   }
 }
 
-class MetaWhatsAppProvider implements WhatsAppProvider {
-  private readonly phoneNumberId: string;
-  private readonly accessToken: string;
+class TwilioWhatsAppProvider implements WhatsAppProvider {
+  private readonly accountSid: string;
+  private readonly authToken: string;
+  private readonly from: string;
 
-  constructor(phoneNumberId: string, accessToken: string) {
-    this.phoneNumberId = phoneNumberId;
-    this.accessToken = accessToken;
+  constructor(accountSid: string, authToken: string, from: string) {
+    this.accountSid = accountSid;
+    this.authToken = authToken;
+    this.from = from;
   }
 
   async sendTextMessage(toPhoneNumber: string, text: string): Promise<SendTextResult> {
-    const endpoint = `https://graph.facebook.com/v20.0/${this.phoneNumberId}/messages`;
+    const endpoint = `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages.json`;
+    const body = new URLSearchParams({
+      From: normalizeWhatsAppAddress(this.from),
+      To: normalizeWhatsAppAddress(toPhoneNumber),
+      Body: text,
+    });
 
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        "Content-Type": "application/json",
+        Authorization: `Basic ${Buffer.from(`${this.accountSid}:${this.authToken}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: normalizeWhatsAppPhone(toPhoneNumber),
-        type: "text",
-        text: {
-          body: text,
-        },
-      }),
+      body,
     });
 
     if (!response.ok) {
@@ -70,11 +71,8 @@ class MetaWhatsAppProvider implements WhatsAppProvider {
       throw new Error(`WhatsApp API request failed: ${response.status} ${body}`);
     }
 
-    const json = (await response.json()) as {
-      messages?: Array<{ id?: string }>;
-    };
-    const messageId = json.messages?.[0]?.id;
-    return messageId ? { providerMessageId: messageId } : {};
+    const json = (await response.json()) as { sid?: string };
+    return json.sid ? { providerMessageId: json.sid } : {};
   }
 }
 
@@ -127,13 +125,17 @@ function createProvider(config: WhatsAppToolConfig): WhatsAppProvider {
     return new DisabledWhatsAppProvider();
   }
 
-  if (config.provider === "meta") {
-    if (!config.metaPhoneNumberId || !config.metaAccessToken) {
+  if (config.provider === "twilio") {
+    if (!config.twilioAccountSid || !config.twilioAuthToken || !config.twilioWhatsAppFrom) {
       throw new Error(
-        "Missing WhatsApp Meta configuration. Set WHATSAPP_META_PHONE_NUMBER_ID and WHATSAPP_META_ACCESS_TOKEN.",
+        "Missing Twilio WhatsApp configuration. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_WHATSAPP_FROM.",
       );
     }
-    return new MetaWhatsAppProvider(config.metaPhoneNumberId, config.metaAccessToken);
+    return new TwilioWhatsAppProvider(
+      config.twilioAccountSid,
+      config.twilioAuthToken,
+      config.twilioWhatsAppFrom,
+    );
   }
 
   throw new Error(`Unsupported WhatsApp provider: ${String(config.provider)}`);
@@ -154,6 +156,7 @@ function buildHotLeadMessage(input: TriggerHotLeadWhatsAppInput): string {
   ].join("\n");
 }
 
-function normalizeWhatsAppPhone(value: string): string {
-  return value.replace(/[^\d]/g, "");
+function normalizeWhatsAppAddress(value: string): string {
+  const phone = value.replace(/^whatsapp:/i, "").replace(/[^\d+]/g, "");
+  return `whatsapp:${phone.startsWith("+") ? phone : `+${phone}`}`;
 }
