@@ -24,6 +24,7 @@ import {
 } from "../../platform/lib/services/call.service.ts";
 import { HotLeadWhatsAppTool } from "./automation/whatsapp.ts";
 import { CallbackTool } from "./automation/callback.ts";
+import { generateCallSummary } from "./summary/call-summary.ts";
 
 export function createAgent(room?: Room): voice.Agent {
   const stt = new WhisperSttEngine({
@@ -283,7 +284,27 @@ export function createAgent(room?: Room): voice.Agent {
 
         if (activeCallId) {
           try {
-            await completeCall(activeCallId, transcript.fullText());
+            const fullTranscript = transcript.fullText().trim();
+            let summary: string | undefined;
+            if (fullTranscript) {
+              try {
+                summary =
+                  (await generateCallSummary({
+                    model: config.llmModel,
+                    transcript: fullTranscript,
+                    conversationState,
+                    intent: lastPersistedIntent,
+                  })) ?? undefined;
+              } catch (error) {
+                console.error("Call summary generation error:", error);
+              }
+            }
+
+            await completeCall(
+              activeCallId,
+              fullTranscript || undefined,
+              summary,
+            );
           } catch (error) {
             console.error("Call completion error:", error);
           }
