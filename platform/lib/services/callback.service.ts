@@ -21,3 +21,29 @@ export async function createScheduledCallback(input: {
     },
   });
 }
+
+export async function getDueScheduledCallbacks(limit = 10) {
+  return prisma.callback.findMany({
+    where: {
+      status: CallbackStatus.SCHEDULED,
+      scheduledAt: { lte: new Date() },
+    },
+    orderBy: { scheduledAt: "asc" },
+    take: limit,
+    include: { lead: true },
+  });
+}
+
+export async function markCallbackCompleted(callbackId: string) {
+  return prisma.callback.update({
+    where: { id: callbackId },
+    data: { status: CallbackStatus.COMPLETED },
+  });
+}
+
+export async function markCallbackFailed(callbackId: string, notes: string) {
+  return prisma.callback.update({
+    where: { id: callbackId },
+    data: { status: CallbackStatus.FAILED, notes },
+  });
+}
