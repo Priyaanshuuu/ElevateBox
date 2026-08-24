@@ -14,6 +14,9 @@ import {
 import { buildSalesSystemPrompt } from "./prompts/sales.ts";
 import { createConversationState, updateConversationState } from "./conversation/state.ts";
 import { formatRagContext, PgVectorRag } from "./rag/index.ts";
+import { classifyLeadIntent } from "./intent/classifier.ts";
+import { getOrCreateLeadForIdentity, persistLeadIntent } from "./intent/persistence.ts";
+import { LeadIntent } from "../../platform/generated/prisma/enums.ts";
 
 export function createAgent(room?: Room): voice.Agent {
   const stt = new WhisperSttEngine({
@@ -58,6 +61,8 @@ export function createAgent(room?: Room): voice.Agent {
 
   let sessionStarted = false;
   let lastHandledTranscript = "";
+  let activeLeadId: string | null = null;
+  let lastPersistedIntent: LeadIntent = LeadIntent.UNKNOWN;
 
   console.log("Voice Sales Agent initialized with STT");
 
@@ -88,6 +93,19 @@ export function createAgent(room?: Room): voice.Agent {
 
     const nextState = updateConversationState(conversationState, normalized);
     Object.assign(conversationState, nextState);
+
+    const nextIntent = classifyLeadIntent(conversationState);
+    if (nextIntent !== lastPersistedIntent) {
+      lastPersistedIntent = nextIntent;
+      console.log("Lead intent updated:", nextIntent);
+      if (activeLeadId) {
+        try {
+          await persistLeadIntent(activeLeadId, nextIntent);
+        } catch (error) {
+          console.error("Lead intent persistence error:", error);
+        }
+      }
+    }
 
     let ragContext = "";
     if (rag) {
@@ -157,6 +175,21 @@ export function createAgent(room?: Room): voice.Agent {
 
     void (async () => {
       try {
+        if (!activeLeadId) {
+          try {
+            const lead = await getOrCreateLeadForIdentity(participant.identity);
+            if (lead) {
+              activeLeadId = lead.id;
+              console.log(`Lead resolved for intent tracking: ${lead.phoneNumber}`);
+              if (lastPersistedIntent !== LeadIntent.UNKNOWN) {
+                await persistLeadIntent(activeLeadId, lastPersistedIntent);
+              }
+            }
+          } catch (error) {
+            console.error("Lead resolution error:", error);
+          }
+        }
+
         if (room) {
           await ensureSessionStarted(room);
         }
