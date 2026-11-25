@@ -381,3 +381,26 @@ export type {
   WebhookEventItem,
   WebhookEventProjectionInput,
 } from "./dashboard-projection.ts";
+export {
+  MemoryWebhookStore,
+  ReliabilityStoreError,
+} from "./memory-webhook-store.ts";
+export type {
+  MemoryWebhookStoreOptions,
+  MemoryWebhookStoreSnapshot,
+  StoredBolnaExecution,
+  StoredCall,
+  StoredLead,
+  StoredWebhookEvent,
+} from "./memory-webhook-store.ts";
+export {
+  RELIABILITY_GATE_CHECKS,
+  runReliabilityGate,
+} from "./reliability-gate.ts";
+export type {
+  ReliabilityCheck,
+  ReliabilityCheckName,
+  ReliabilityGateInput,
+  ReliabilityGateResult,
+  ReliabilityMetrics,
+} from "./reliability-gate.ts";

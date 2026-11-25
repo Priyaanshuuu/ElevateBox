@@ -1,6 +1,6 @@
 # Bolna Migration Inventory — Step 0
 
-Status: **Step 9 dashboard complete — no live call placed**
+Status: **Step 10 offline gates complete — no live call placed**
 
 ## Decision
 
@@ -133,10 +133,11 @@ If that value was ever a real credential, it must be **rotated**, because removi
 - **Step 7:** offline gate complete — see `11-step7-static-transcript-gate.md`. Structured en/hi/te/code-switch transcript parsing, offline webhook → extraction → lead projection, summary safety, signed tool dedupe, callback signature safety, offline WhatsApp alert, and a deterministic pre-call gate digest passed with zero network requests. **No live call was placed.**
 - **Step 8:** harness complete — see `12-step8-live-canary-harness.md`. A nine-check, fail-closed execution gate, a default-SKIP/dry-run-first single-call runner, reviewed plan digest binding, real readiness/cost checks, and 12 offline evals passed. **No live call, trunk mutation, or agent mutation was performed.**
 - **Step 9:** dashboard complete — see `13-step9-normalized-dashboard.md`. The dashboard now reads normalized `BolnaExecution`, `BolnaWebhookEvent`, and `BolnaToolInvocation` data through a pure projection adapter, with executions/events pages, provider metrics on overview, linked execution detail on calls, header redaction, and 9 offline evals. **No schema change, migration, mutation, or provider request was added.**
+- **Step 10:** offline reliability/cost/load gate complete — see `14-step10-reliability-cost-load.md`. A 13-check fail-closed gate covers replay, key-order dedupe, out-of-order and terminal-refresh guards, failure recovery, concurrent webhook/tool bursts, pending claims, and cost/budget gates with 12 offline evals and `networkRequests: 0`. **No live call, database write, or provider request was performed.**
 
 ## Next step
 
-All offline gates and the live-canary harness are complete. An actual live canary still requires separate, explicit authorization with real carrier details, rate inputs, and a reviewed plan digest. The Step 6 readiness and cost checks must be run against those real inputs immediately before the call. No live call is authorized until that gate is granted.
+All offline gates, the live-canary harness, and the reliability/cost/load gate are complete. The remaining retire-order items are an authorized live canary and a documented, tested rollback drill. An actual live canary still requires separate, explicit authorization with real carrier details, rate inputs, and a reviewed plan digest. The Step 6 readiness and cost checks must be run against those real inputs immediately before the call. No live call is authorized until that gate is granted.
 
 Gate for Step 1:
 
