@@ -22,6 +22,22 @@ import {
   type BolnaCallResponse,
 } from "./agent-types.ts";
 import {
+  parseBolnaBulkDispositionsResponse,
+  parseBolnaDispositionCreateResponse,
+  parseBolnaDispositionTestResponse,
+  parseBolnaExtractionCategory,
+  parseBolnaExtractionCategoryListResponse,
+  type BolnaBulkDispositionsRequest,
+  type BolnaBulkDispositionsResponse,
+  type BolnaDispositionCreateRequest,
+  type BolnaDispositionCreateResponse,
+  type BolnaDispositionTestRequest,
+  type BolnaDispositionTestResponse,
+  type BolnaExtractionCategory,
+  type BolnaExtractionCategoryCreate,
+  type BolnaExtractionCategoryListResponse,
+} from "./extraction-types.ts";
+import {
   parseBolnaExecutionSnapshot,
   parseBolnaUser,
   type BolnaExecutionSnapshot,
@@ -52,6 +68,23 @@ export interface BolnaClient {
     versionId: string,
   ): Promise<BolnaAgentVersionSetCurrentResponse>;
   getExecution(executionId: string): Promise<BolnaExecutionSnapshot>;
+  createExtractionCategory(
+    agentId: string,
+    request: BolnaExtractionCategoryCreate,
+  ): Promise<BolnaExtractionCategory>;
+  listExtractionCategories(
+    agentId: string,
+  ): Promise<BolnaExtractionCategoryListResponse>;
+  createDisposition(
+    request: BolnaDispositionCreateRequest,
+  ): Promise<BolnaDispositionCreateResponse>;
+  createDispositionsBulk(
+    request: BolnaBulkDispositionsRequest,
+  ): Promise<BolnaBulkDispositionsResponse>;
+  testDispositions(
+    agentId: string,
+    request: BolnaDispositionTestRequest,
+  ): Promise<BolnaDispositionTestResponse>;
   makeCall(request: BolnaCallRequest): Promise<BolnaCallResponse>;
 }
 
@@ -166,6 +199,24 @@ export function createBolnaClient(options: BolnaClientOptions = {}): BolnaClient
     async getExecution(executionId) {
       const path = `/executions/${encodeURIComponent(executionId)}`;
       return parseBolnaExecutionSnapshot(await request<unknown>(path));
+    },
+    async createExtractionCategory(agentId, categoryRequest) {
+      const path = `/agent/${encodeURIComponent(agentId)}/extraction-categories`;
+      return parseBolnaExtractionCategory(await postJson(path, categoryRequest));
+    },
+    async listExtractionCategories(agentId) {
+      const path = `/agent/${encodeURIComponent(agentId)}/extraction-categories`;
+      return parseBolnaExtractionCategoryListResponse(await request<unknown>(path));
+    },
+    async createDisposition(dispositionRequest) {
+      return parseBolnaDispositionCreateResponse(await postJson("/dispositions/", dispositionRequest));
+    },
+    async createDispositionsBulk(bulkRequest) {
+      return parseBolnaBulkDispositionsResponse(await postJson("/dispositions/bulk", bulkRequest));
+    },
+    async testDispositions(agentId, testRequest) {
+      const path = `/v2/agent/${encodeURIComponent(agentId)}/dispositions/test`;
+      return parseBolnaDispositionTestResponse(await postJson(path, testRequest));
     },
     async makeCall(callRequest) {
       return parseBolnaCallResponse(await postJson("/call", callRequest));

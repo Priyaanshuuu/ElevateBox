@@ -62,14 +62,60 @@ export type {
 export {
   buildWebhookDedupeKey,
   extractLeadFacts,
+  extractLeadFactsFromData,
   isKnownBolnaStatus,
   isTerminalBolnaStatus,
   mapBolnaStatusToCallStatus,
+  MIN_EXTRACTION_CONFIDENCE,
   parseBolnaWebhookPayload,
+  sanitizeCallSummary,
   sanitizeWebhookHeaders,
   shouldProjectIncomingBolnaEvent,
 } from "./webhook.ts";
 export type { JsonValue, LeadFacts, NormalizedBolnaWebhook } from "./webhook.ts";
+export {
+  parseBolnaBulkDispositionsResponse,
+  parseBolnaDispositionCreateResponse,
+  parseBolnaDispositionTestResponse,
+  parseBolnaExtractionCategory,
+  parseBolnaExtractionCategoryListResponse,
+  parseBolnaExtractionResult,
+} from "./extraction-types.ts";
+export type {
+  BolnaBulkDispositionsRequest,
+  BolnaBulkDispositionsResponse,
+  BolnaDispositionCreateRequest,
+  BolnaDispositionCreateResponse,
+  BolnaDispositionItem,
+  BolnaDispositionSummary,
+  BolnaDispositionTestRequest,
+  BolnaDispositionTestResponse,
+  BolnaExtractionCategory,
+  BolnaExtractionCategoryCreate,
+  BolnaExtractionCategoryListResponse,
+  BolnaExtractionModel,
+  BolnaExtractionResult,
+  BolnaObjectiveOption,
+  BolnaSubjectiveType,
+} from "./extraction-types.ts";
+export {
+  buildLeadQualificationDispositions,
+  createLeadQualificationPlan,
+  LEAD_QUALIFICATION_CATEGORY,
+  LEAD_QUALIFICATION_MODEL,
+  validateLeadQualificationPlan,
+} from "./qualification-config.ts";
+export type { LeadQualificationPlan } from "./qualification-config.ts";
+export {
+  CODE_SWITCH_TRANSCRIPT,
+  DISPOSITION_TEST_RESPONSE,
+  EXPECTED_LEAD_FACTS,
+  LOW_CONFIDENCE_EXTRACTED_DATA,
+  NO_USER_TURN_SUMMARY,
+  QUALIFICATION_EXTRACTED_DATA,
+  QUALIFICATION_TRANSCRIPT,
+  SKIPPED_EXTRACTED_DATA,
+} from "./qualification-fixtures.ts";
 export {
   DEFAULT_BOLNA_WEBHOOK_SOURCE_IPS,
   extractClientIp,

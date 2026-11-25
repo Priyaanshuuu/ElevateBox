@@ -140,4 +140,4 @@ No live agent creation, version save, version promotion, or call was performed f
 - Secret-safe API behavior: **passed**
 - Typecheck, lint, build: **passed**
 
-Step 4 may proceed: qualification/extraction and summary evals against the pinned candidate version.
+Step 4 passed: qualification/extraction and summary evals are recorded in `08-step4-extraction-summary.md`.

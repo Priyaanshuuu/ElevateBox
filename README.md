@@ -1,6 +1,6 @@
 AI Voice Sales Agent
 
-> **Migration status:** ElevateBox is moving from LiveKit Agents to **Bolna** as the primary voice runtime. Steps 0–3 have passed their gates: foundation, webhook normalization, and agent config/versioning. `my-agent/` is frozen as a legacy/rollback reference. See `docs/04-bolna-migration-inventory.md` for the migration inventory and gates, and `docs/07-step3-agent-config-versioning.md` for the latest gate record.
+> **Migration status:** ElevateBox is moving from LiveKit Agents to **Bolna** as the primary voice runtime. Steps 0–4 have passed their gates: foundation, webhook normalization, agent config/versioning, and qualification extraction/summary safety. `my-agent/` is frozen as a legacy/rollback reference. See `docs/04-bolna-migration-inventory.md` for the migration inventory and gates, and `docs/08-step4-extraction-summary.md` for the latest gate record.
 
 An AI-powered outbound voice agent that calls a potential customer, conducts a natural sales conversation for an e-commerce website, understands the customer's requirements and buying intent, and triggers real-world automations during and after the call.
 
@@ -354,5 +354,5 @@ Status
 
 🔄 Bolna migration in progress
 
-Steps 0–2 are complete: the LiveKit agent is frozen, the typed Bolna API client passed its offline and live `GET /user/me` gates, and durable webhook normalization passed idempotency/replay evals. See `docs/04-bolna-migration-inventory.md`, `docs/05-step1-bolna-foundation.md`, and `docs/06-step2-webhook-normalization.md`.
+Steps 0–4 are complete: the LiveKit agent is frozen, the typed Bolna API client passed its offline and live `GET /user/me` gates, durable webhook normalization passed idempotency/replay evals, agent config/versioning passed deterministic and secret-safety evals, and qualification extraction/summary normalization passed grouped-output and no-user-turn evals. See `docs/04-bolna-migration-inventory.md`, `docs/07-step3-agent-config-versioning.md`, and `docs/08-step4-extraction-summary.md`.
 

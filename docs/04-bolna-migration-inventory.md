@@ -127,10 +127,11 @@ If that value was ever a real credential, it must be **rotated**, because removi
 - **Step 1:** complete — see `05-step1-bolna-foundation.md`. Both offline evals and the live `GET /user/me` smoke passed.
 - **Step 2:** complete — see `06-step2-webhook-normalization.md`. Durable webhook intake, idempotency, terminal-status guards, replay evals, and corrected Bolna-compatible webhook security (URL token + source IP allowlist + execution verification) passed.
 - **Step 3:** complete — see `07-step3-agent-config-versioning.md`. Deterministic agent config, immutable versions, pinned call requests, multilingual/VAD baseline, and secret-safe API evals passed.
+- **Step 4:** complete — see `08-step4-extraction-summary.md`. Typed extraction/disposition APIs, deterministic qualification config, grouped extraction normalization, confidence/skip guards, no-user-turn summary safety, and no-live apply gates passed.
 
 ## Next step
 
-Continue with Step 4 — qualification/extraction and summary evals against a pinned, non-live agent version.
+Continue with Step 5 — knowledge base grounding and signed tool/callback endpoint evals against a pinned candidate version.
 
 Gate for Step 1:
 

@@ -19,6 +19,7 @@
     "eval": "pnpm typecheck && pnpm test",
     "bolna:smoke": "node scripts/bolna-smoke.ts",
     "bolna:agent:apply": "node scripts/bolna-agent-apply.ts",
+    "bolna:extraction:apply": "node scripts/bolna-extraction-apply.ts",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",

@@ -246,7 +246,7 @@ export function parseBolnaWebhookPayload(payload: unknown): NormalizedBolnaWebho
       readNumber(root, "conversation_duration") ?? readNumber(telephony, "duration"),
     totalCost: readNumber(root, "total_cost"),
     transcript: readString(root, "transcript"),
-    summary: readString(root, "summary"),
+    summary: sanitizeCallSummary(root.summary),
     extractedData: readJson(root.extracted_data),
     nodeExtractedData: readJson(root.node_extracted_data),
     telephonyData: readJson(root.telephony_data),
@@ -297,29 +297,157 @@ export function shouldProjectIncomingBolnaEvent(
   return existing === incoming && isTerminalBolnaStatus(incoming);
 }
 
-export function extractLeadFacts(normalized: NormalizedBolnaWebhook): LeadFacts {
-  const sources = [normalized.extractedData, normalized.nodeExtractedData];
+export const MIN_EXTRACTION_CONFIDENCE = 0.5;
+const NO_USER_TURN_SUMMARY_MARKER = "Summary not generated as there was no user turn";
+
+export function sanitizeCallSummary(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === NO_USER_TURN_SUMMARY_MARKER) return null;
+  return trimmed;
+}
+
+interface NestedExtractionResult {
+  category: string;
+  name: string;
+  value: Record<string, unknown>;
+}
+
+function looksLikeExtractionResult(value: Record<string, unknown>): boolean {
+  return [
+    "subjective",
+    "objective",
+    "confidence",
+    "status",
+    "status_reason",
+  ].some((key) => key in value);
+}
+
+function collectNestedExtractionResults(
+  sources: readonly unknown[],
+): NestedExtractionResult[] {
+  const output: NestedExtractionResult[] = [];
+  for (const source of sources) {
+    const root = asRecord(source);
+    if (!root) continue;
+
+    for (const [category, categoryValue] of Object.entries(root)) {
+      const categoryRecord = asRecord(categoryValue);
+      if (!categoryRecord) continue;
+
+      for (const [name, resultValue] of Object.entries(categoryRecord)) {
+        const result = asRecord(resultValue);
+        if (result && looksLikeExtractionResult(result)) {
+          output.push({ category, name, value: result });
+        }
+      }
+    }
+  }
+  return output;
+}
+
+function resultText(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === "null") return null;
+    return trimmed;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) {
+    const joined = value
+      .map((item) => resultText(item))
+      .filter((item): item is string => Boolean(item))
+      .join(", ");
+    return joined || null;
+  }
+  return null;
+}
+
+function isUsableExtractionResult(result: Record<string, unknown>): boolean {
+  const status =
+    typeof result.status === "string" ? result.status.trim().toLowerCase() : "completed";
+  if (status !== "completed") return false;
+
+  const confidence = result.confidence;
+  if (
+    typeof confidence === "number" &&
+    Number.isFinite(confidence) &&
+    confidence < MIN_EXTRACTION_CONFIDENCE
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+interface NestedValueLookup {
+  matched: boolean;
+  value: string | null;
+}
+
+function findNestedValue(
+  results: readonly NestedExtractionResult[],
+  aliases: readonly string[],
+): NestedValueLookup {
+  const normalizedAliases = aliases.map(normalizedKey);
+  let matched = false;
+
+  for (const item of results) {
+    const nameKey = normalizedKey(item.name);
+    const pathKey = `${normalizedKey(item.category)}${nameKey}`;
+    const matches = normalizedAliases.some(
+      (alias) => nameKey.includes(alias) || pathKey.includes(alias),
+    );
+    if (!matches) continue;
+
+    matched = true;
+    if (!isUsableExtractionResult(item.value)) continue;
+
+    const value = resultText(item.value.objective) ?? resultText(item.value.subjective);
+    if (value) return { matched: true, value };
+  }
+
+  return { matched, value: null };
+}
+
+export function extractLeadFactsFromData(...sources: readonly unknown[]): LeadFacts {
   const flat: Record<string, string> = {};
   for (const source of sources) {
     flattenJson(source, "", flat);
   }
 
-  const featureValue = findFlattenedValue(flat, [
-    "features",
-    "requestedfeatures",
-    "websiterequirements",
-  ]);
+  const nested = collectNestedExtractionResults(sources);
+  const findValue = (aliases: readonly string[]): string | null => {
+    const found = findNestedValue(nested, aliases);
+    if (found.matched) return found.value;
+
+    // No structured result for this field means the payload may still be a
+    // legacy flat extraction. Never fall back through a low-confidence or
+    // skipped structured result: that would silently project rejected data.
+    return findFlattenedValue(flat, aliases);
+  };
+
+  const featureValue = findValue(["features", "requestedfeatures", "websiterequirements"]);
 
   return {
-    business: findFlattenedValue(flat, ["business", "companyname", "businessname"]),
-    productCount: readNumber({ value: findFlattenedValue(flat, ["productcount", "numberofproducts"]) }, "value"),
-    budget: readNumber({ value: findFlattenedValue(flat, ["budget"]) }, "value"),
-    timeline: findFlattenedValue(flat, ["timeline"]),
+    business: findValue(["business", "companyname", "businessname"]),
+    productCount: readNumber(
+      { value: findValue(["productcount", "numberofproducts"]) },
+      "value",
+    ),
+    budget: readNumber({ value: findValue(["budget"]) }, "value"),
+    timeline: findValue(["timeline"]),
     features: parseCommaList(featureValue),
     intent: parseLeadIntent(
-      findFlattenedValue(flat, ["leadintent", "intent", "qualificationleadintent"]),
+      findValue(["leadintent", "intent", "qualificationleadintent"]),
     ),
   };
+}
+
+export function extractLeadFacts(normalized: NormalizedBolnaWebhook): LeadFacts {
+  return extractLeadFactsFromData(normalized.extractedData, normalized.nodeExtractedData);
 }
 
 function stableStringify(value: unknown): string {
