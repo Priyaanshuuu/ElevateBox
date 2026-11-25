@@ -1,6 +1,6 @@
 # Bolna Migration Inventory — Step 0
 
-Status: **Step 6 planning complete — no live call placed**
+Status: **Step 7 offline gate complete — no live call placed**
 
 ## Decision
 
@@ -130,10 +130,11 @@ If that value was ever a real credential, it must be **rotated**, because removi
 - **Step 4:** complete — see `08-step4-extraction-summary.md`. Typed extraction/disposition APIs, deterministic qualification config, grouped extraction normalization, confidence/skip guards, no-user-turn summary safety, and no-live apply gates passed.
 - **Step 5:** complete — see `09-step5-knowledge-tools.md`. Digest-stamped knowledge PDF creation, typed KB API, agent KB attachment, signed custom tools with durable dedupe, HMAC-signed workflow callbacks, ported callback/WhatsApp behavior, and explicit SKIP/nightly-safe live paths passed.
 - **Step 6:** planning complete — see `10-step6-telephony-canary.md`. Typed `/trunk` APIs, trunk/canary plan safety, cost-aware worst-case estimation and caps, agent telephony provider config-as-code, outbound call pinning, inbound readiness checks, and explicit SKIP/offline-only scripts passed. **No live trunk, number, agent mutation, or call was created.**
+- **Step 7:** offline gate complete — see `11-step7-static-transcript-gate.md`. Structured en/hi/te/code-switch transcript parsing, offline webhook → extraction → lead projection, summary safety, signed tool dedupe, callback signature safety, offline WhatsApp alert, and a deterministic pre-call gate digest passed with zero network requests. **No live call was placed.**
 
 ## Next step
 
-A live canary requires separate, explicit authorization with real carrier details, rate inputs, and a reviewed plan digest. No live call is authorized until that gate is granted.
+All offline gates are complete. A live canary requires separate, explicit authorization with real carrier details, rate inputs, and a reviewed plan digest. The Step 6 readiness and cost checks must be run against those real inputs immediately before the call. No live call is authorized until that gate is granted.
 
 Gate for Step 1:
 

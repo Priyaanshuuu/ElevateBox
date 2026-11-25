@@ -317,3 +317,39 @@ export type {
   ToolInvocationRecord,
   ToolResult,
 } from "./tool-handler.ts";
+export {
+  detectTranscriptScript,
+  evaluateStaticTranscript,
+  extractTranscriptSignals,
+  parseStaticTranscript,
+  staticTranscriptDigest,
+} from "./transcript-eval.ts";
+export type {
+  StaticTranscript,
+  StaticTranscriptEvalResult,
+  TranscriptEvalCheck,
+  TranscriptScript,
+  TranscriptSignals,
+  TranscriptSpeaker,
+  TranscriptTurn,
+} from "./transcript-eval.ts";
+export {
+  buildStaticTranscriptCases,
+  buildTranscriptWebhookPayload,
+  transcriptFixtureDigest,
+  HINDI_TRANSCRIPT,
+  TELUGU_TRANSCRIPT,
+  TRANSCRIPT_TOOL_CALLS,
+} from "./transcript-fixtures.ts";
+export type {
+  StaticTranscriptCase,
+  TranscriptToolCallFixture,
+} from "./transcript-fixtures.ts";
+export { evaluatePreCallGate } from "./precall-gate.ts";
+export type {
+  PreCallGateCheck,
+  PreCallGateInput,
+  PreCallGateResult,
+} from "./precall-gate.ts";
+export { runOfflineTranscriptGate } from "./transcript-gate-runner.ts";
+export type { OfflineTranscriptGateReport } from "./transcript-gate-runner.ts";

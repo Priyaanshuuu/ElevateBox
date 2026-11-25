@@ -1,6 +1,6 @@
 AI Voice Sales Agent
 
-> **Migration status:** ElevateBox is moving from LiveKit Agents to **Bolna** as the primary voice runtime. Steps 0–6 have passed their gates: foundation, webhook normalization, agent config/versioning, qualification extraction/summary safety, knowledge grounding/signed tools and callbacks, and pre-call SIP trunk/cost-aware canary planning. `my-agent/` is frozen as a legacy/rollback reference. **No live call has been placed.** See `docs/04-bolna-migration-inventory.md` for the migration inventory and gates, and `docs/10-step6-telephony-canary.md` for the latest gate record.
+> **Migration status:** ElevateBox is moving from LiveKit Agents to **Bolna** as the primary voice runtime. Steps 0–7 have passed their gates: foundation, webhook normalization, agent config/versioning, qualification extraction/summary safety, knowledge grounding/signed tools and callbacks, pre-call SIP trunk/cost-aware canary planning, and a fully offline static-transcript end-to-end gate. `my-agent/` is frozen as a legacy/rollback reference. **No live call has been placed.** See `docs/04-bolna-migration-inventory.md` for the migration inventory and gates, and `docs/11-step7-static-transcript-gate.md` for the latest gate record.
 
 An AI-powered outbound voice agent that calls a potential customer, conducts a natural sales conversation for an e-commerce website, understands the customer's requirements and buying intent, and triggers real-world automations during and after the call.
 

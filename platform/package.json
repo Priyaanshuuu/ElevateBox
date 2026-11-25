@@ -24,6 +24,7 @@
     "bolna:callback:smoke": "node scripts/bolna-callback-smoke.ts",
     "bolna:trunk:plan": "node scripts/bolna-trunk-plan.ts",
     "bolna:trunk:check": "node scripts/bolna-trunk-check.ts",
+    "bolna:transcript:gate": "node scripts/bolna-transcript-gate.ts",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
