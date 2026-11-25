@@ -121,9 +121,14 @@ A token-like comment was found at the end of `platform/prisma/schema.prisma` and
 
 If that value was ever a real credential, it must be **rotated**, because removing it from the current file does not remove it from Git history.
 
+## Progress
+
+- **Step 0:** complete — LiveKit frozen and migration inventory recorded.
+- **Step 1:** offline gate complete — see `05-step1-bolna-foundation.md`. The live `GET /user/me` check still needs a real `BOLNA_API_KEY`.
+
 ## Next step
 
-Start **Step 1 — repository foundation and Bolna API client**.
+Complete the Step 1 live smoke with a real Bolna credential, then start Step 2.
 
 Gate for Step 1:
 

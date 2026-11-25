@@ -354,5 +354,5 @@ Status
 
 🔄 Bolna migration in progress
 
-Step 0 is complete: the LiveKit agent is frozen and the migration inventory is recorded in `docs/04-bolna-migration-inventory.md`. The next milestone is a Bolna API client foundation with `GET /user/me` smoke verification.
+Step 0 is complete: the LiveKit agent is frozen and the migration inventory is recorded in `docs/04-bolna-migration-inventory.md`. Step 1 has passed its offline gate with a typed Bolna API client and fixture evals; the live `GET /user/me` smoke is pending a real `BOLNA_API_KEY`. See `docs/05-step1-bolna-foundation.md`.
 
