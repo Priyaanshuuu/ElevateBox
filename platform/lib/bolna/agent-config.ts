@@ -65,6 +65,7 @@ export interface ElevateBoxAgentSpec {
     welcomeMessageDelayMs: number;
     voicemail: boolean;
   };
+  telephonyProvider: "default" | "trunk";
   knowledgeBaseIds: string[];
   apiTools: BolnaApiToolsConfig | null;
   languages: Record<BolnaLanguageCode, ElevateBoxLanguageConfig>;
@@ -174,6 +175,7 @@ export function createElevateBoxAgentSpec(options: {
   agentName?: string;
   knowledgeBaseIds?: string[];
   apiTools?: BolnaApiToolsConfig | null;
+  telephonyProvider?: "default" | "trunk";
 }): ElevateBoxAgentSpec {
   return {
     agentName: options.agentName ?? "ElevateBox Ecommerce Sales Agent",
@@ -213,6 +215,7 @@ export function createElevateBoxAgentSpec(options: {
       welcomeMessageDelayMs: 250,
       voicemail: true,
     },
+    telephonyProvider: options.telephonyProvider ?? "default",
     knowledgeBaseIds: [...(options.knowledgeBaseIds ?? [])],
     apiTools: options.apiTools ?? null,
     languages: {
@@ -274,6 +277,10 @@ export function createElevateBoxAgentSpec(options: {
 
 export function validateElevateBoxAgentSpec(spec: ElevateBoxAgentSpec): void {
   validateWebhookUrl(spec.webhookUrl);
+
+  if (spec.telephonyProvider !== "default" && spec.telephonyProvider !== "trunk") {
+    throw new BolnaConfigError("Telephony provider must be default or trunk.");
+  }
 
   if (!Array.isArray(spec.knowledgeBaseIds) || spec.knowledgeBaseIds.length > 10) {
     throw new BolnaConfigError("Attach at most 10 knowledge bases to the agent.");
@@ -407,6 +414,7 @@ export function buildElevateBoxAgentRequest(
       agent_name: spec.agentName,
       agent_welcome_message: active.welcomeMessage,
       webhook_url: spec.webhookUrl,
+      telephony_provider: spec.telephonyProvider,
       call_summary_enabled: true,
       tasks: [
         {

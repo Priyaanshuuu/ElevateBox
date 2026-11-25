@@ -1,6 +1,6 @@
 # Bolna Migration Inventory — Step 0
 
-Status: **Step 0 complete**
+Status: **Step 6 planning complete — no live call placed**
 
 ## Decision
 
@@ -46,7 +46,7 @@ ElevateBox owns:
 | Concern | Source of truth during migration |
 |---|---|
 | Product requirements | `README.md` + `docs/` |
-| Canonical service knowledge | `knowledge/service-overview.md`, later mirrored into Bolna knowledge base |
+| Canonical service knowledge | `knowledge/service-overview.md`, mirrored into a digest-stamped Bolna PDF knowledge base |
 | Lead and callback business state | Prisma DB |
 | Voice execution state | Bolna execution |
 | Final call result | Bolna `completed` execution + our normalized `CallExecution` |
@@ -66,11 +66,11 @@ ElevateBox owns:
 | Conversation state | `my-agent/src/conversation/state.ts` | Regex extraction into in-memory object | Bolna dispositions/extractions + DB snapshots | Port fields to extraction schema | Slot F1 ≥ 90% |
 | Intent classification | `my-agent/src/intent/classifier.ts` | Rule-based HOT/WARM/COLD/UNKNOWN | `lead_intent` disposition | Port rules to extraction definition | Intent accuracy ≥ 90% |
 | Lead persistence | `my-agent/src/intent/persistence.ts` | Direct Prisma service call from agent | Webhook processor + platform service | Move behind webhook normalization | Idempotency replay test |
-| RAG | `my-agent/src/rag/index.ts` | Raw pgvector retrieval with external embeddings | Bolna knowledge base | Upload canonical source and attach to agent | Grounding eval; no fabricated facts |
-| Knowledge source | `knowledge/service-overview.md` | Markdown source for RAG ingest | Bolna knowledge base source | Preserve locally; mirror to Bolna | Retrieval Q&A eval |
+| RAG | `my-agent/src/rag/index.ts` | Raw pgvector retrieval with external embeddings | Bolna knowledge base | Generate digest-stamped PDF and attach vector ids to agent v2 | Grounding eval; no fabricated facts |
+| Knowledge source | `knowledge/service-overview.md` | Markdown source for RAG ingest | Bolna knowledge base source | Preserve locally; mirror to Bolna | Step 5 canonical source/digest/PDF evals |
 | Call summary | `my-agent/src/summary/call-summary.ts` | LiveKit inference LLM summary at track end | Bolna Call Summary extraction; optional fallback summary worker | Enable call summary; compare quality | Summary factuality ≥ 95% |
-| HOT WhatsApp | `my-agent/src/automation/whatsapp.ts` | Twilio WhatsApp call from agent | Bolna custom function → platform API | Expose as signed tool endpoint | Tool precision/recall; duplicate send = 0 |
-| Callback scheduling | `my-agent/src/automation/callback.ts` | Natural-language parser creates DB callback | Bolna custom function + platform API | Reuse parser as platform service | Callback time parsing eval |
+| HOT WhatsApp | `my-agent/src/automation/whatsapp.ts` | Twilio WhatsApp call from agent | Bolna custom function → platform API | Ported to signed tool endpoint with durable dedupe | Step 5 E.164, offline send, duplicate send = 0 |
+| Callback scheduling | `my-agent/src/automation/callback.ts` | Natural-language parser creates DB callback | Bolna custom function + platform API | Ported parser to platform service behind signed tool | Step 5 timezone and dedupe evals |
 | Outbound dialing | `my-agent/src/callback-worker.ts` | LiveKit `createSipParticipant` + dispatch | Bolna `POST /call`, batch, or workflow campaign | Retire LiveKit worker | Canary calls; terminal-status handling |
 | Inbound calls | Not implemented in current agent | LiveKit room entry assumed | Bolna inbound number → agent mapping | Add in telephony step | 10 inbound canary calls |
 | SIP trunk | LiveKit outbound trunk ID | LiveKit SIP | Bolna phone numbers or `/trunk` API | Choose per region/carrier | Echo test + SIP trunk call eval |
@@ -128,10 +128,12 @@ If that value was ever a real credential, it must be **rotated**, because removi
 - **Step 2:** complete — see `06-step2-webhook-normalization.md`. Durable webhook intake, idempotency, terminal-status guards, replay evals, and corrected Bolna-compatible webhook security (URL token + source IP allowlist + execution verification) passed.
 - **Step 3:** complete — see `07-step3-agent-config-versioning.md`. Deterministic agent config, immutable versions, pinned call requests, multilingual/VAD baseline, and secret-safe API evals passed.
 - **Step 4:** complete — see `08-step4-extraction-summary.md`. Typed extraction/disposition APIs, deterministic qualification config, grouped extraction normalization, confidence/skip guards, no-user-turn summary safety, and no-live apply gates passed.
+- **Step 5:** complete — see `09-step5-knowledge-tools.md`. Digest-stamped knowledge PDF creation, typed KB API, agent KB attachment, signed custom tools with durable dedupe, HMAC-signed workflow callbacks, ported callback/WhatsApp behavior, and explicit SKIP/nightly-safe live paths passed.
+- **Step 6:** planning complete — see `10-step6-telephony-canary.md`. Typed `/trunk` APIs, trunk/canary plan safety, cost-aware worst-case estimation and caps, agent telephony provider config-as-code, outbound call pinning, inbound readiness checks, and explicit SKIP/offline-only scripts passed. **No live trunk, number, agent mutation, or call was created.**
 
 ## Next step
 
-Continue with Step 5 — knowledge base grounding and signed tool/callback endpoint evals against a pinned candidate version.
+A live canary requires separate, explicit authorization with real carrier details, rate inputs, and a reviewed plan digest. No live call is authorized until that gate is granted.
 
 Gate for Step 1:
 

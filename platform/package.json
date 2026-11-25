@@ -22,6 +22,8 @@
     "bolna:extraction:apply": "node scripts/bolna-extraction-apply.ts",
     "bolna:knowledge:apply": "node scripts/bolna-knowledge-apply.ts",
     "bolna:callback:smoke": "node scripts/bolna-callback-smoke.ts",
+    "bolna:trunk:plan": "node scripts/bolna-trunk-plan.ts",
+    "bolna:trunk:check": "node scripts/bolna-trunk-check.ts",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",

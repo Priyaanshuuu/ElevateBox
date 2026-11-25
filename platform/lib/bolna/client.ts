@@ -61,6 +61,32 @@ import {
   type BolnaWorkflowCallbackDelivery,
   type BolnaWorkflowCallbackEndpoint,
 } from "./callback-types.ts";
+import {
+  buildAgentTelephonyPatchRequest,
+  parseBolnaAgentPatchResponse,
+  parseBolnaTrunk,
+  parseBolnaTrunkCallListResponse,
+  parseBolnaTrunkConnectionDetails,
+  parseBolnaTrunkListResponse,
+  parseBolnaTrunkNumber,
+  parseBolnaTrunkGateway,
+  parseBolnaTrunkCarrierIp,
+  serializeTrunkCreateRequest,
+  serializeTrunkNumberRequest,
+  type BolnaAgentPatchResponse,
+  type BolnaCarrierIpRequest,
+  type BolnaTelephonyProvider,
+  type BolnaTrunk,
+  type BolnaTrunkCallListResponse,
+  type BolnaTrunkCarrierIp,
+  type BolnaTrunkConnectionDetails,
+  type BolnaTrunkCreateRequest,
+  type BolnaTrunkGateway,
+  type BolnaTrunkListResponse,
+  type BolnaTrunkNumber,
+  type BolnaTrunkNumberRequest,
+  type BolnaTrunkCallFilter,
+} from "./trunk-types.ts";
 
 export interface BolnaClientOptions {
   config?: BolnaConfig;
@@ -82,7 +108,7 @@ export interface BolnaKnowledgeCreateInput {
 export interface BolnaClient {
   readonly baseUrl: string;
   readonly timeoutMs: number;
-  request<T>(path: string, init?: RequestInit): Promise<T>;
+  request<T>(path: string, init?: RequestInit, secrets?: readonly string[]): Promise<T>;
   getUser(): Promise<BolnaUser>;
   createAgent(request: BolnaAgentRequestV2): Promise<BolnaAgentCreateResponse>;
   saveAgentVersion(
@@ -131,6 +157,31 @@ export interface BolnaClient {
     endpoint: BolnaWorkflowCallbackEndpoint,
     body: string,
   ): Promise<BolnaWorkflowCallbackDelivery>;
+  listTrunks(): Promise<BolnaTrunkListResponse>;
+  getTrunk(trunkId: string): Promise<BolnaTrunk>;
+  createTrunk(request: BolnaTrunkCreateRequest): Promise<BolnaTrunk>;
+  getTrunkConnectionDetails(): Promise<BolnaTrunkConnectionDetails>;
+  listTrunkCalls(
+    trunkId: string,
+    options?: { direction?: BolnaTrunkCallFilter; limit?: number; number?: string },
+  ): Promise<BolnaTrunkCallListResponse>;
+  addTrunkGateway(
+    trunkId: string,
+    request: { host: string; port?: number; priority?: number },
+  ): Promise<BolnaTrunkGateway>;
+  addTrunkCarrierIp(trunkId: string, request: BolnaCarrierIpRequest): Promise<BolnaTrunkCarrierIp>;
+  addTrunkNumber(
+    trunkId: string,
+    request: BolnaTrunkNumberRequest,
+  ): Promise<BolnaTrunkNumber>;
+  assignTrunkAgent(
+    numberId: string,
+    agentId: string | null,
+  ): Promise<BolnaTrunkNumber>;
+  patchAgentTelephonyProvider(
+    agentId: string,
+    provider: BolnaTelephonyProvider,
+  ): Promise<BolnaAgentPatchResponse>;
   makeCall(request: BolnaCallRequest): Promise<BolnaCallResponse>;
 }
 
@@ -168,7 +219,11 @@ export function createBolnaClient(options: BolnaClientOptions = {}): BolnaClient
   const config = options.config ?? loadBolnaConfig();
   const fetchImpl = options.fetchImpl ?? fetch;
 
-  async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  async function request<T>(
+    path: string,
+    init: RequestInit = {},
+    secrets: readonly string[] = [],
+  ): Promise<T> {
     const url = buildUrl(config.baseUrl, path);
     const headers = new Headers(init.headers);
     headers.set("Authorization", `Bearer ${config.apiKey}`);
@@ -202,7 +257,7 @@ export function createBolnaClient(options: BolnaClientOptions = {}): BolnaClient
     }
 
     if (!response.ok) {
-      const snippet = await readErrorSnippet(response, [config.apiKey]);
+      const snippet = await readErrorSnippet(response, [config.apiKey, ...secrets]);
       const retryable = response.status === 429 || response.status >= 500;
       throw new BolnaHttpError(
         `Bolna request failed with status ${response.status}${snippet ? `: ${snippet}` : ""}.`,
@@ -213,9 +268,24 @@ export function createBolnaClient(options: BolnaClientOptions = {}): BolnaClient
     return await parseJsonResponse<T>(response);
   }
 
-  function postJson(path: string, body: unknown): Promise<unknown> {
+  function postJson(
+    path: string,
+    body: unknown,
+    secrets: readonly string[] = [],
+  ): Promise<unknown> {
+    return request<unknown>(
+      path,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      secrets,
+    );
+  }
+
+  function patchJson(path: string, body: unknown): Promise<unknown> {
     return request<unknown>(path, {
-      method: "POST",
+      method: "PATCH",
       body: JSON.stringify(body),
     });
   }
@@ -357,6 +427,51 @@ export function createBolnaClient(options: BolnaClientOptions = {}): BolnaClient
     },
     async postWorkflowCallback(endpoint, body) {
       return postSignedCallback(endpoint, body);
+    },
+    async listTrunks() {
+      return parseBolnaTrunkListResponse(await request<unknown>("/trunk/trunks"));
+    },
+    async getTrunk(trunkId) {
+      const path = `/trunk/trunks/${encodeURIComponent(trunkId)}`;
+      return parseBolnaTrunk(await request<unknown>(path));
+    },
+    async createTrunk(trunkRequest) {
+      const body = serializeTrunkCreateRequest(trunkRequest);
+      const secrets = typeof body.auth_password === "string" ? [body.auth_password] : [];
+      return parseBolnaTrunk(await postJson("/trunk/trunks", body, secrets));
+    },
+    async getTrunkConnectionDetails() {
+      return parseBolnaTrunkConnectionDetails(await request<unknown>("/trunk/pop"));
+    },
+    async listTrunkCalls(trunkId, options = {}) {
+      const query = new URLSearchParams();
+      if (options.direction) query.set("direction", options.direction);
+      if (options.limit !== undefined) query.set("limit", String(options.limit));
+      if (options.number) query.set("number", options.number);
+      const suffix = query.size > 0 ? `?${query.toString()}` : "";
+      const path = `/trunk/trunks/${encodeURIComponent(trunkId)}/calls${suffix}`;
+      return parseBolnaTrunkCallListResponse(await request<unknown>(path));
+    },
+    async addTrunkGateway(trunkId, gatewayRequest) {
+      const path = `/trunk/trunks/${encodeURIComponent(trunkId)}/gateways`;
+      return parseBolnaTrunkGateway(await postJson(path, gatewayRequest));
+    },
+    async addTrunkCarrierIp(trunkId, carrierIpRequest) {
+      const path = `/trunk/trunks/${encodeURIComponent(trunkId)}/ip-acls`;
+      return parseBolnaTrunkCarrierIp(await postJson(path, carrierIpRequest));
+    },
+    async addTrunkNumber(trunkId, numberRequest) {
+      const path = `/trunk/trunks/${encodeURIComponent(trunkId)}/numbers`;
+      const body = serializeTrunkNumberRequest(numberRequest);
+      return parseBolnaTrunkNumber(await postJson(path, body));
+    },
+    async assignTrunkAgent(numberId, agentId) {
+      const path = `/trunk/numbers/${encodeURIComponent(numberId)}`;
+      return parseBolnaTrunkNumber(await patchJson(path, { agent_id: agentId }));
+    },
+    async patchAgentTelephonyProvider(agentId, provider) {
+      const path = `/v2/agent/${encodeURIComponent(agentId)}`;
+      return parseBolnaAgentPatchResponse(await patchJson(path, buildAgentTelephonyPatchRequest(provider)));
     },
     async makeCall(callRequest) {
       return parseBolnaCallResponse(await postJson("/call", callRequest));

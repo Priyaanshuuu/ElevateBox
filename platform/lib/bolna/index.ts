@@ -66,6 +66,90 @@ export type {
   BolnaLanguageCode,
 } from "./agent-types.ts";
 export {
+  buildAgentTelephonyPatchRequest,
+  isE164TrunkPhone,
+  isPublicIpv4,
+  isPublicIpv4Cidr,
+  isTrunkGatewayHost,
+  isUuid,
+  parseBolnaAgentPatchResponse,
+  parseBolnaTrunk,
+  parseBolnaTrunkCallListResponse,
+  parseBolnaTrunkCarrierIp,
+  parseBolnaTrunkConnectionDetails,
+  parseBolnaTrunkGateway,
+  parseBolnaTrunkListResponse,
+  parseBolnaTrunkNumber,
+  parseTrunkCodecs,
+  serializeTrunkCreateRequest,
+  serializeTrunkNumberRequest,
+  validateAgentTelephonyProvider,
+  validateBolnaTrunkCreateRequest,
+  validateBolnaTrunkGatewayRequest,
+  validateCarrierIpRequest,
+  validateTrunkNumberRequest,
+} from "./trunk-types.ts";
+export type {
+  BolnaAgentPatchResponse,
+  BolnaCarrierIpRequest,
+  BolnaTelephonyProvider,
+  BolnaTrunk,
+  BolnaTrunkCall,
+  BolnaTrunkCallDirection,
+  BolnaTrunkCallFilter,
+  BolnaTrunkCallListResponse,
+  BolnaTrunkCarrierIp,
+  BolnaTrunkCodec,
+  BolnaTrunkConnectionDetails,
+  BolnaTrunkCreateRequest,
+  BolnaTrunkGateway,
+  BolnaTrunkGatewayRequest,
+  BolnaTrunkHealth,
+  BolnaTrunkListResponse,
+  BolnaTrunkNumber,
+  BolnaTrunkNumberRequest,
+  BolnaTrunkPreset,
+  BolnaTrunkTransport,
+} from "./trunk-types.ts";
+export {
+  buildCanaryTrunkCreateRequest,
+  buildCanaryTrunkNumberRequests,
+  canaryTrunkPlanDigest,
+  canaryTrunkPlanFromEnv,
+  maskedCanaryTrunkPlan,
+  validateCanaryTrunkPlan,
+  MAX_CANARY_CHANNELS,
+  MAX_CANARY_NUMBERS,
+} from "./trunk-config.ts";
+export type {
+  CanaryTrunkNumber,
+  CanaryTrunkPlan,
+} from "./trunk-config.ts";
+export {
+  evaluateCanaryCostGate,
+  estimateWorstCaseCallCost,
+  loadCallCostRatesFromEnv,
+  validateCallCostRates,
+} from "./call-cost.ts";
+export type {
+  CallCostEstimate,
+  CallCostEstimateInput,
+  CallCostRates,
+  CanaryCostGateInput,
+  CanaryCurrency,
+  CostGateResult,
+} from "./call-cost.ts";
+export {
+  buildOutboundCanaryCallRequest,
+  evaluateCanaryReadiness,
+} from "./canary-plan.ts";
+export type {
+  CanaryReadinessInput,
+  CanaryReadinessResult,
+  OutboundCanaryInput,
+  ReadinessCheck,
+} from "./canary-plan.ts";
+export {
   buildWebhookDedupeKey,
   extractLeadFacts,
   extractLeadFactsFromData,

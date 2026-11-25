@@ -56,6 +56,14 @@ function voiceFor(language: BolnaLanguageCode): ElevateBoxVoiceConfig {
   };
 }
 
+function telephonyProviderFromEnv(): "default" | "trunk" {
+  const value = process.env.BOLNA_TELEPHONY_PROVIDER?.trim() || "default";
+  if (value !== "default" && value !== "trunk") {
+    throw new Error("BOLNA_TELEPHONY_PROVIDER must be default or trunk.");
+  }
+  return value;
+}
+
 function knowledgeBaseIdsFromEnv(): string[] {
   return (process.env.BOLNA_KNOWLEDGE_BASE_IDS ?? "")
     .split(",")
@@ -90,6 +98,7 @@ try {
       hi: voiceFor("hi"),
       te: voiceFor("te"),
     },
+    telephonyProvider: telephonyProviderFromEnv(),
     knowledgeBaseIds: knowledgeBaseIdsFromEnv(),
     apiTools: toolConfigFromEnv(),
   });
