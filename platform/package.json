@@ -25,6 +25,7 @@
     "bolna:trunk:plan": "node scripts/bolna-trunk-plan.ts",
     "bolna:trunk:check": "node scripts/bolna-trunk-check.ts",
     "bolna:transcript:gate": "node scripts/bolna-transcript-gate.ts",
+    "bolna:canary:run": "node scripts/bolna-canary-run.ts",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",

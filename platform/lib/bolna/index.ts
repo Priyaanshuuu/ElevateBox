@@ -353,3 +353,11 @@ export type {
 } from "./precall-gate.ts";
 export { runOfflineTranscriptGate } from "./transcript-gate-runner.ts";
 export type { OfflineTranscriptGateReport } from "./transcript-gate-runner.ts";
+export { evaluateCanaryExecutionGate, runCanaryExecution } from "./canary-execution.ts";
+export type {
+  CanaryExecutionCheck,
+  CanaryExecutionDependencies,
+  CanaryExecutionGateResult,
+  CanaryExecutionInput,
+  CanaryExecutionResult,
+} from "./canary-execution.ts";
