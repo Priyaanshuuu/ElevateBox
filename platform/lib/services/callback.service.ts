@@ -1,5 +1,5 @@
-import { CallbackStatus } from "../../generated/prisma/client";
-import { prisma } from "../prisma";
+import { CallbackStatus } from "../../generated/prisma/client.ts";
+import { prisma } from "../prisma.ts";
 
 export async function createScheduledCallback(input: {
   leadId: string;

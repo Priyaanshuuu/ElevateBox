@@ -4,11 +4,13 @@ import type {
   BolnaAgentRequestV2,
   BolnaAgentVersionRequestV2,
   BolnaLanguageCode,
+  BolnaLlmAgentConfig,
   BolnaLlmConfig,
   BolnaMultilingualLanguageEntry,
   BolnaSynthesizerConfig,
   BolnaTranscriberConfig,
 } from "./agent-types.ts";
+import { validateBolnaToolConfig, type BolnaApiToolsConfig } from "./tool-config.ts";
 
 export interface ElevateBoxVoiceConfig {
   provider: string;
@@ -63,6 +65,8 @@ export interface ElevateBoxAgentSpec {
     welcomeMessageDelayMs: number;
     voicemail: boolean;
   };
+  knowledgeBaseIds: string[];
+  apiTools: BolnaApiToolsConfig | null;
   languages: Record<BolnaLanguageCode, ElevateBoxLanguageConfig>;
 }
 
@@ -168,6 +172,8 @@ export function createElevateBoxAgentSpec(options: {
   versionName?: string;
   tags?: string[];
   agentName?: string;
+  knowledgeBaseIds?: string[];
+  apiTools?: BolnaApiToolsConfig | null;
 }): ElevateBoxAgentSpec {
   return {
     agentName: options.agentName ?? "ElevateBox Ecommerce Sales Agent",
@@ -207,6 +213,8 @@ export function createElevateBoxAgentSpec(options: {
       welcomeMessageDelayMs: 250,
       voicemail: true,
     },
+    knowledgeBaseIds: [...(options.knowledgeBaseIds ?? [])],
+    apiTools: options.apiTools ?? null,
     languages: {
       en: {
         systemPrompt: [
@@ -266,6 +274,21 @@ export function createElevateBoxAgentSpec(options: {
 
 export function validateElevateBoxAgentSpec(spec: ElevateBoxAgentSpec): void {
   validateWebhookUrl(spec.webhookUrl);
+
+  if (!Array.isArray(spec.knowledgeBaseIds) || spec.knowledgeBaseIds.length > 10) {
+    throw new BolnaConfigError("Attach at most 10 knowledge bases to the agent.");
+  }
+  const seenKnowledgeIds = new Set<string>();
+  for (const id of spec.knowledgeBaseIds) {
+    if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id)) {
+      throw new BolnaConfigError("Knowledge base vector ids must be UUIDs.");
+    }
+    if (seenKnowledgeIds.has(id)) {
+      throw new BolnaConfigError("Knowledge base vector ids must be unique.");
+    }
+    seenKnowledgeIds.add(id);
+  }
+  if (spec.apiTools) validateBolnaToolConfig(spec.apiTools);
 
   if (!spec.versionName.trim()) {
     throw new BolnaConfigError("Agent version name is required.");
@@ -347,6 +370,20 @@ export function buildElevateBoxAgentRequest(
     verbosity: spec.llm.verbosity,
     compact_threshold: spec.llm.compactThreshold,
   };
+  const knowledgeIds = [...spec.knowledgeBaseIds];
+  const llmAgent: BolnaLlmAgentConfig = {
+    agent_type: knowledgeIds.length > 0 ? "knowledgebase_agent" : "simple_llm_agent",
+    agent_flow_type: "streaming",
+    llm_config: llmConfig,
+    ...(knowledgeIds.length > 0
+      ? {
+          vector_store: {
+            provider: "lancedb",
+            provider_config: { vector_ids: knowledgeIds },
+          },
+        }
+      : {}),
+  };
   const languages: Record<string, BolnaMultilingualLanguageEntry> = {};
 
   for (const language of LANGUAGE_CODES) {
@@ -379,16 +416,12 @@ export function buildElevateBoxAgentRequest(
             pipelines: [["transcriber", "llm", "synthesizer"]],
           },
           tools_config: {
-            llm_agent: {
-              agent_type: "simple_llm_agent",
-              agent_flow_type: "streaming",
-              llm_config: llmConfig,
-            },
+            llm_agent: llmAgent,
             transcriber: baseTranscriber,
             synthesizer: synthesizerFor(active.voice),
             input: { provider: "trunk", format: "linear16" },
             output: { provider: "trunk", format: "linear16" },
-            api_tools: null,
+            api_tools: spec.apiTools,
             s2s: null,
             multilingual_config: {
               enabled: true,

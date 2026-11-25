@@ -1,8 +1,8 @@
 import {
   AutomationStatus,
   AutomationType,
-} from "../../generated/prisma/client";
-import { prisma } from "../prisma";
+} from "../../generated/prisma/client.ts";
+import { prisma } from "../prisma.ts";
 
 export async function getActiveInterestedLeadWhatsAppEvent(
   leadId: string,

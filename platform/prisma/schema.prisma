@@ -197,3 +197,19 @@ model BolnaWebhookEvent {
   @@index([status])
   @@index([receivedAt])
 }
+
+model BolnaToolInvocation {
+  id           String   @id @default(cuid())
+  dedupeKey    String   @unique
+  toolName     String
+  executionId  String?
+  status       String
+  result       Json?
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([toolName])
+  @@index([executionId])
+  @@index([createdAt])
+}

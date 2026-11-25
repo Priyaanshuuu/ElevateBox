@@ -1,5 +1,5 @@
-import { CallStatus } from "../../generated/prisma/client";
-import { prisma } from "../prisma";
+import { CallStatus } from "../../generated/prisma/client.ts";
+import { prisma } from "../prisma.ts";
 
 export async function createCall(leadId: string) {
   return prisma.call.create({

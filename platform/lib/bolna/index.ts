@@ -1,5 +1,10 @@
 export { createBolnaClient } from "./client.ts";
-export type { BolnaClient, BolnaClientOptions } from "./client.ts";
+export type {
+  BolnaClient,
+  BolnaClientOptions,
+  BolnaKnowledgeCreateInput,
+  BolnaKnowledgeSourceInput,
+} from "./client.ts";
 export { loadBolnaConfig, BOLNA_DEFAULT_BASE_URL, BOLNA_DEFAULT_TIMEOUT_MS } from "./config.ts";
 export type { BolnaConfig } from "./config.ts";
 export {
@@ -9,6 +14,7 @@ export {
   BolnaNetworkError,
   BolnaResponseError,
   BolnaTimeoutError,
+  BolnaToolError,
   BolnaWebhookError,
   redactSecrets,
 } from "./errors.ts";
@@ -138,3 +144,92 @@ export type {
   UpsertCallInput,
   UpdateLeadInput,
 } from "./webhook-store.ts";
+export {
+  buildLeadQualificationCallbackBody,
+  isE164Phone,
+  validateCallbackBody,
+} from "./callback-config.ts";
+export type { LeadQualificationCallbackInput } from "./callback-config.ts";
+export {
+  BOLNA_CALLBACK_MAX_BODY_BYTES,
+  BOLNA_CALLBACK_SIGNATURE_HEADER,
+  isBolnaCallbackSignatureValid,
+  parseBolnaWorkflowCallbackDelivery,
+  parseBolnaWorkflowCallbackEndpoint,
+  signBolnaCallbackBody,
+  validateCallbackSigningSecret,
+} from "./callback-types.ts";
+export type {
+  BolnaWorkflowCallbackDelivery,
+  BolnaWorkflowCallbackEndpoint,
+} from "./callback-types.ts";
+export {
+  createKnowledgeBasePdf,
+  createElevateBoxKnowledgePlan,
+  evaluateKnowledgeGrounding,
+  KNOWLEDGE_GROUNDING_EVALS,
+  KNOWLEDGE_LANGUAGE_SUPPORT,
+  knowledgeFileName,
+  loadElevateBoxKnowledgePlan,
+  SERVICE_OVERVIEW_PATH,
+  SERVICE_OVERVIEW_PDF_NAME,
+  SERVICE_OVERVIEW_PDF_PREFIX,
+  validateKnowledgeSource,
+} from "./knowledge-config.ts";
+export type {
+  ElevateBoxKnowledgePlan,
+  KnowledgeGroundingEval,
+} from "./knowledge-config.ts";
+export {
+  parseBolnaKnowledgeBase,
+  parseBolnaKnowledgeBaseDeleteResponse,
+  parseBolnaKnowledgeBaseListResponse,
+} from "./knowledge-types.ts";
+export type {
+  BolnaKnowledgeBase,
+  BolnaKnowledgeBaseDeleteResponse,
+  BolnaKnowledgeBaseListResponse,
+  BolnaKnowledgeLanguageSupport,
+  BolnaKnowledgeStatus,
+} from "./knowledge-types.ts";
+export {
+  buildBolnaToolUrl,
+  buildElevateBoxToolConfig,
+  isBolnaToolName,
+  listBolnaToolNames,
+  toolConfigDigest,
+  validateBolnaToolConfig,
+  validateBolnaToolUrl,
+  BOLNA_TOOL_SCHEMA_VERSION,
+  TOOL_AUTH_MIN_TOKEN_LENGTH,
+} from "./tool-config.ts";
+export type {
+  BolnaApiToolsConfig,
+  BolnaCustomFunctionParam,
+  BolnaToolName,
+} from "./tool-config.ts";
+export {
+  isBolnaToolSourceAllowed,
+  isBolnaToolTokenValid,
+  loadBolnaToolAuthConfig,
+} from "./tool-auth.ts";
+export type { BolnaToolAuthConfig } from "./tool-auth.ts";
+export {
+  buildToolDedupeKey,
+  createMemoryToolStore,
+  createProductionToolHandlers,
+  handleBolnaToolRequest,
+  parseHotLeadWhatsAppArgs,
+  parseScheduleCallbackArgs,
+} from "./tool-handler.ts";
+export type {
+  BolnaToolStore,
+  HandleBolnaToolRequestInput,
+  HandleBolnaToolRequestResult,
+  HotLeadWhatsAppArgs,
+  ScheduleCallbackArgs,
+  ToolHandlers,
+  ToolInvocationContext,
+  ToolInvocationRecord,
+  ToolResult,
+} from "./tool-handler.ts";

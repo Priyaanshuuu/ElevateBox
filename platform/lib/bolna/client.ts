@@ -1,5 +1,6 @@
 import { loadBolnaConfig, type BolnaConfig } from "./config.ts";
 import {
+  BolnaConfigError,
   BolnaHttpError,
   BolnaNetworkError,
   BolnaResponseError,
@@ -43,10 +44,39 @@ import {
   type BolnaExecutionSnapshot,
   type BolnaUser,
 } from "./types.ts";
+import {
+  parseBolnaKnowledgeBase,
+  parseBolnaKnowledgeBaseDeleteResponse,
+  parseBolnaKnowledgeBaseListResponse,
+  type BolnaKnowledgeBase,
+  type BolnaKnowledgeBaseDeleteResponse,
+  type BolnaKnowledgeBaseListResponse,
+} from "./knowledge-types.ts";
+import {
+  BOLNA_CALLBACK_MAX_BODY_BYTES,
+  BOLNA_CALLBACK_SIGNATURE_HEADER,
+  parseBolnaWorkflowCallbackDelivery,
+  parseBolnaWorkflowCallbackEndpoint,
+  signBolnaCallbackBody,
+  type BolnaWorkflowCallbackDelivery,
+  type BolnaWorkflowCallbackEndpoint,
+} from "./callback-types.ts";
 
 export interface BolnaClientOptions {
   config?: BolnaConfig;
   fetchImpl?: typeof fetch;
+}
+
+export type BolnaKnowledgeSourceInput =
+  | { kind: "url"; url: string }
+  | { kind: "pdf"; fileName: string; bytes: Uint8Array };
+
+export interface BolnaKnowledgeCreateInput {
+  source: BolnaKnowledgeSourceInput;
+  chunkSize?: number;
+  similarityTopK?: number;
+  overlapping?: number;
+  languageSupport?: "multilingual";
 }
 
 export interface BolnaClient {
@@ -85,6 +115,22 @@ export interface BolnaClient {
     agentId: string,
     request: BolnaDispositionTestRequest,
   ): Promise<BolnaDispositionTestResponse>;
+  createKnowledgeBase(input: BolnaKnowledgeCreateInput): Promise<BolnaKnowledgeBase>;
+  listKnowledgeBases(): Promise<BolnaKnowledgeBaseListResponse>;
+  getKnowledgeBase(ragId: string): Promise<BolnaKnowledgeBase>;
+  deleteKnowledgeBase(ragId: string): Promise<BolnaKnowledgeBaseDeleteResponse>;
+  getWorkflowCallback(
+    workflowId: string,
+    nodeId: string,
+  ): Promise<BolnaWorkflowCallbackEndpoint>;
+  rotateWorkflowCallback(
+    workflowId: string,
+    nodeId: string,
+  ): Promise<BolnaWorkflowCallbackEndpoint>;
+  postWorkflowCallback(
+    endpoint: BolnaWorkflowCallbackEndpoint,
+    body: string,
+  ): Promise<BolnaWorkflowCallbackDelivery>;
   makeCall(request: BolnaCallRequest): Promise<BolnaCallResponse>;
 }
 
@@ -96,10 +142,10 @@ function isTimeoutError(error: unknown): boolean {
   return error instanceof Error && error.name === "TimeoutError";
 }
 
-async function readErrorSnippet(response: Response, apiKey: string): Promise<string> {
+async function readErrorSnippet(response: Response, secrets: readonly string[]): Promise<string> {
   try {
     const text = await response.text();
-    return redactSecrets(text, [apiKey]).replace(/\s+/g, " ").trim().slice(0, 2000);
+    return redactSecrets(text, secrets).replace(/\s+/g, " ").trim().slice(0, 2000);
   } catch {
     return "";
   }
@@ -129,7 +175,11 @@ export function createBolnaClient(options: BolnaClientOptions = {}): BolnaClient
     if (!headers.has("Accept")) {
       headers.set("Accept", "application/json");
     }
-    if (init.body !== undefined && !headers.has("Content-Type")) {
+    if (
+      init.body !== undefined &&
+      !headers.has("Content-Type") &&
+      !(typeof FormData !== "undefined" && init.body instanceof FormData)
+    ) {
       headers.set("Content-Type", "application/json");
     }
 
@@ -152,7 +202,7 @@ export function createBolnaClient(options: BolnaClientOptions = {}): BolnaClient
     }
 
     if (!response.ok) {
-      const snippet = await readErrorSnippet(response, config.apiKey);
+      const snippet = await readErrorSnippet(response, [config.apiKey]);
       const retryable = response.status === 429 || response.status >= 500;
       throw new BolnaHttpError(
         `Bolna request failed with status ${response.status}${snippet ? `: ${snippet}` : ""}.`,
@@ -168,6 +218,51 @@ export function createBolnaClient(options: BolnaClientOptions = {}): BolnaClient
       method: "POST",
       body: JSON.stringify(body),
     });
+  }
+
+  async function postSignedCallback(
+    endpoint: BolnaWorkflowCallbackEndpoint,
+    body: string,
+  ): Promise<BolnaWorkflowCallbackDelivery> {
+    if (Buffer.byteLength(body, "utf8") > BOLNA_CALLBACK_MAX_BODY_BYTES) {
+      throw new BolnaConfigError("Bolna callback body exceeds 262144 bytes.");
+    }
+    const signature = signBolnaCallbackBody(body, endpoint.signingSecret);
+    const headers = new Headers({
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      [BOLNA_CALLBACK_SIGNATURE_HEADER]: signature,
+    });
+
+    let response: Response;
+    try {
+      response = await fetchImpl(endpoint.url, {
+        method: "POST",
+        headers,
+        body,
+        signal: AbortSignal.timeout(config.timeoutMs),
+      });
+    } catch (cause) {
+      if (isTimeoutError(cause)) {
+        throw new BolnaTimeoutError(`Bolna callback timed out after ${config.timeoutMs}ms.`, {
+          cause,
+        });
+      }
+      throw new BolnaNetworkError("Bolna callback failed before a response was received.", {
+        cause,
+      });
+    }
+
+    if (!response.ok) {
+      const snippet = await readErrorSnippet(response, [config.apiKey, endpoint.signingSecret, endpoint.url]);
+      const retryable = response.status === 429 || response.status >= 500;
+      throw new BolnaHttpError(
+        `Bolna callback failed with status ${response.status}${snippet ? `: ${snippet}` : ""}.`,
+        { status: response.status, retryable },
+      );
+    }
+
+    return parseBolnaWorkflowCallbackDelivery(await parseJsonResponse<unknown>(response));
   }
 
   return {
@@ -217,6 +312,51 @@ export function createBolnaClient(options: BolnaClientOptions = {}): BolnaClient
     async testDispositions(agentId, testRequest) {
       const path = `/v2/agent/${encodeURIComponent(agentId)}/dispositions/test`;
       return parseBolnaDispositionTestResponse(await postJson(path, testRequest));
+    },
+    async createKnowledgeBase(input) {
+      const form = new FormData();
+      if (input.source.kind === "url") {
+        form.set("url", input.source.url);
+      } else {
+        form.set(
+          "file",
+          new Blob([new Uint8Array(input.source.bytes)], { type: "application/pdf" }),
+          input.source.fileName,
+        );
+      }
+      if (input.chunkSize !== undefined) form.set("chunk_size", String(input.chunkSize));
+      if (input.similarityTopK !== undefined) {
+        form.set("similarity_top_k", String(input.similarityTopK));
+      }
+      if (input.overlapping !== undefined) form.set("overlapping", String(input.overlapping));
+      if (input.languageSupport !== undefined) {
+        form.set("language_support", input.languageSupport);
+      }
+      return parseBolnaKnowledgeBase(await request<unknown>("/knowledgebase", { method: "POST", body: form }));
+    },
+    async listKnowledgeBases() {
+      return parseBolnaKnowledgeBaseListResponse(await request<unknown>("/knowledgebase/all"));
+    },
+    async getKnowledgeBase(ragId) {
+      const path = `/knowledgebase/${encodeURIComponent(ragId)}`;
+      return parseBolnaKnowledgeBase(await request<unknown>(path));
+    },
+    async deleteKnowledgeBase(ragId) {
+      const path = `/knowledgebase/${encodeURIComponent(ragId)}`;
+      return parseBolnaKnowledgeBaseDeleteResponse(
+        await request<unknown>(path, { method: "DELETE" }),
+      );
+    },
+    async getWorkflowCallback(workflowId, nodeId) {
+      const path = `/workflows/${encodeURIComponent(workflowId)}/nodes/${encodeURIComponent(nodeId)}/callback`;
+      return parseBolnaWorkflowCallbackEndpoint(await request<unknown>(path));
+    },
+    async rotateWorkflowCallback(workflowId, nodeId) {
+      const path = `/workflows/${encodeURIComponent(workflowId)}/nodes/${encodeURIComponent(nodeId)}/callback:rotate`;
+      return parseBolnaWorkflowCallbackEndpoint(await postJson(path, {}));
+    },
+    async postWorkflowCallback(endpoint, body) {
+      return postSignedCallback(endpoint, body);
     },
     async makeCall(callRequest) {
       return parseBolnaCallResponse(await postJson("/call", callRequest));

@@ -3,10 +3,12 @@ import { config as loadEnv } from "dotenv";
 import {
   BolnaError,
   buildAgentVersionPlan,
+  buildElevateBoxToolConfig,
   createBolnaClient,
   createElevateBoxAgentSpec,
   promoteAgentVersion,
   registerCandidateAgentVersion,
+  type BolnaApiToolsConfig,
   type BolnaLanguageCode,
   type ElevateBoxVoiceConfig,
 } from "../lib/bolna/index.ts";
@@ -54,6 +56,25 @@ function voiceFor(language: BolnaLanguageCode): ElevateBoxVoiceConfig {
   };
 }
 
+function knowledgeBaseIdsFromEnv(): string[] {
+  return (process.env.BOLNA_KNOWLEDGE_BASE_IDS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+function toolConfigFromEnv(): BolnaApiToolsConfig | null {
+  const baseUrl = process.env.BOLNA_TOOLS_BASE_URL?.trim() || null;
+  const token = process.env.BOLNA_TOOL_TOKEN?.trim() || null;
+  if (Boolean(baseUrl) !== Boolean(token)) {
+    throw new Error(
+      "BOLNA_TOOLS_BASE_URL and BOLNA_TOOL_TOKEN must be set together, or both left unset.",
+    );
+  }
+  if (!baseUrl || !token) return null;
+  return buildElevateBoxToolConfig({ baseUrl, token });
+}
+
 try {
   const webhookUrl = requiredEnv("BOLNA_WEBHOOK_URL");
   const webhookToken = requiredEnv("BOLNA_WEBHOOK_URL_TOKEN");
@@ -69,6 +90,8 @@ try {
       hi: voiceFor("hi"),
       te: voiceFor("te"),
     },
+    knowledgeBaseIds: knowledgeBaseIdsFromEnv(),
+    apiTools: toolConfigFromEnv(),
   });
   const plan = buildAgentVersionPlan(spec);
   const client = createBolnaClient();
