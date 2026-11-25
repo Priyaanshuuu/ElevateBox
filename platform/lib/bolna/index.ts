@@ -361,3 +361,23 @@ export type {
   CanaryExecutionInput,
   CanaryExecutionResult,
 } from "./canary-execution.ts";
+export {
+  buildBolnaOperationsSummary,
+  formatDashboardCost,
+  formatDashboardJson,
+  projectExecutionDetail,
+  projectExecutionListItem,
+  projectToolInvocation,
+  projectWebhookEvent,
+  sanitizeDashboardHeaders,
+} from "./dashboard-projection.ts";
+export type {
+  BolnaOperationsSummary,
+  ExecutionDetail,
+  ExecutionListItem,
+  ExecutionProjectionInput,
+  ToolInvocationItem,
+  ToolInvocationProjectionInput,
+  WebhookEventItem,
+  WebhookEventProjectionInput,
+} from "./dashboard-projection.ts";

@@ -6,6 +6,8 @@ const navigation = [
   { href: "/calls", label: "Calls", icon: "phone" },
   { href: "/callbacks", label: "Callbacks", icon: "clock" },
   { href: "/automations", label: "Automations", icon: "bolt" },
+  { href: "/executions", label: "Executions", icon: "activity" },
+  { href: "/events", label: "Events", icon: "shield" },
 ];
 
 export function DashboardShell({
@@ -39,7 +41,7 @@ export function DashboardShell({
         </nav>
         <div className="sidebar-footer">
           <span className="status-dot" /> Agent online
-          <small>LiveKit runtime</small>
+          <small>Bolna runtime</small>
         </div>
       </aside>
       <main className="main-content">
@@ -85,6 +87,8 @@ function NavIcon({ name }: { name: string }) {
     phone: "M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z",
     clock: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2",
     bolt: "M13 2 3 14h9l-1 8 10-12h-9l1-8z",
+    activity: "M3 12h4l3-8 4 16 3-8h4",
+    shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
   };
   return <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name]} /></svg>;
 }
