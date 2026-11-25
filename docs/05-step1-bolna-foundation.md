@@ -1,6 +1,6 @@
 # Step 1 — Repository Foundation and Bolna API Client
 
-Status: **offline gate passed; live smoke pending credentials**
+Status: **complete — offline gate and live smoke passed**
 
 ## Goal
 
@@ -88,22 +88,13 @@ Run from `platform/`:
 
 ## Live smoke status
 
-The real `GET /user/me` call was **not executed** because `BOLNA_API_KEY` is not available in this environment.
+The real `GET /user/me` smoke was run locally by the user and reported as **PASS**.
 
-To complete the live part of the gate:
-
-```bash
-cd platform
-cp .env.example .env.local
-# set BOLNA_API_KEY and BOLNA_RUN_LIVE_SMOKE=1 in .env.local
-pnpm bolna:smoke
-```
-
-The client must return account id, wallet, and concurrency without printing the key.
+The client returned account id, wallet, and concurrency without printing the API key.
 
 ## Gate decision
 
 - Offline foundation gate: **passed**
-- Live credential gate: **pending user credential**
+- Live credential gate: **passed**
 
-No Step 2 work should begin until the live smoke is either passed with a real key or explicitly waived by the user.
+Step 2 is complete; see `06-step2-webhook-normalization.md`.

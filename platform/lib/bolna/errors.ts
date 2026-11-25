@@ -57,6 +57,13 @@ export class BolnaResponseError extends BolnaError {
   }
 }
 
+export class BolnaWebhookError extends BolnaError {
+  constructor(message: string, options: BolnaErrorOptions = {}) {
+    super(message, options);
+    this.name = "BolnaWebhookError";
+  }
+}
+
 function uniqueStrings(values: readonly (string | undefined)[]): string[] {
   const seen = new Set<string>();
   for (const value of values) {

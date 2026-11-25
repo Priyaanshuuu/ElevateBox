@@ -6,7 +6,27 @@ import {
   BolnaTimeoutError,
   redactSecrets,
 } from "./errors.ts";
-import { parseBolnaUser, type BolnaUser } from "./types.ts";
+import {
+  parseBolnaAgentCreateResponse,
+  parseBolnaAgentVersionListResponse,
+  parseBolnaAgentVersionSaveResponse,
+  parseBolnaAgentVersionSetCurrentResponse,
+  parseBolnaCallResponse,
+  type BolnaAgentCreateResponse,
+  type BolnaAgentRequestV2,
+  type BolnaAgentVersionListResponse,
+  type BolnaAgentVersionRequestV2,
+  type BolnaAgentVersionSaveResponse,
+  type BolnaAgentVersionSetCurrentResponse,
+  type BolnaCallRequest,
+  type BolnaCallResponse,
+} from "./agent-types.ts";
+import {
+  parseBolnaExecutionSnapshot,
+  parseBolnaUser,
+  type BolnaExecutionSnapshot,
+  type BolnaUser,
+} from "./types.ts";
 
 export interface BolnaClientOptions {
   config?: BolnaConfig;
@@ -18,6 +38,21 @@ export interface BolnaClient {
   readonly timeoutMs: number;
   request<T>(path: string, init?: RequestInit): Promise<T>;
   getUser(): Promise<BolnaUser>;
+  createAgent(request: BolnaAgentRequestV2): Promise<BolnaAgentCreateResponse>;
+  saveAgentVersion(
+    agentId: string,
+    request: BolnaAgentVersionRequestV2,
+  ): Promise<BolnaAgentVersionSaveResponse>;
+  listAgentVersions(
+    agentId: string,
+    options?: { pageNumber?: number; pageSize?: number },
+  ): Promise<BolnaAgentVersionListResponse>;
+  setCurrentAgentVersion(
+    agentId: string,
+    versionId: string,
+  ): Promise<BolnaAgentVersionSetCurrentResponse>;
+  getExecution(executionId: string): Promise<BolnaExecutionSnapshot>;
+  makeCall(request: BolnaCallRequest): Promise<BolnaCallResponse>;
 }
 
 function buildUrl(baseUrl: string, path: string): URL {
@@ -95,12 +130,45 @@ export function createBolnaClient(options: BolnaClientOptions = {}): BolnaClient
     return await parseJsonResponse<T>(response);
   }
 
+  function postJson(path: string, body: unknown): Promise<unknown> {
+    return request<unknown>(path, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  }
+
   return {
     baseUrl: config.baseUrl,
     timeoutMs: config.timeoutMs,
     request,
     async getUser() {
       return parseBolnaUser(await request<unknown>("/user/me"));
+    },
+    async createAgent(agentRequest) {
+      return parseBolnaAgentCreateResponse(await postJson("/v2/agent", agentRequest));
+    },
+    async saveAgentVersion(agentId, versionRequest) {
+      const path = `/v2/agent/${encodeURIComponent(agentId)}/versions`;
+      return parseBolnaAgentVersionSaveResponse(await postJson(path, versionRequest));
+    },
+    async listAgentVersions(agentId, options = {}) {
+      const query = new URLSearchParams({
+        page_number: String(options.pageNumber ?? 1),
+        page_size: String(options.pageSize ?? 20),
+      });
+      const path = `/v2/agent/${encodeURIComponent(agentId)}/versions?${query.toString()}`;
+      return parseBolnaAgentVersionListResponse(await request<unknown>(path));
+    },
+    async setCurrentAgentVersion(agentId, versionId) {
+      const path = `/v2/agent/${encodeURIComponent(agentId)}/versions/${encodeURIComponent(versionId)}/set_current`;
+      return parseBolnaAgentVersionSetCurrentResponse(await postJson(path, {}));
+    },
+    async getExecution(executionId) {
+      const path = `/executions/${encodeURIComponent(executionId)}`;
+      return parseBolnaExecutionSnapshot(await request<unknown>(path));
+    },
+    async makeCall(callRequest) {
+      return parseBolnaCallResponse(await postJson("/call", callRequest));
     },
   };
 }

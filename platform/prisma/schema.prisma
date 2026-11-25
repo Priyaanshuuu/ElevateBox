@@ -75,10 +75,13 @@ model Call {
   transcript    String?
   summary       String?
 
+  bolnaExecutionId String? @unique
+
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
   lead          Lead       @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  bolnaExecution BolnaExecution? @relation(fields: [bolnaExecutionId], references: [id], onDelete: SetNull)
 
   callbacks     Callback[]
   automationEvents AutomationEvent[]
@@ -133,4 +136,64 @@ model AutomationEvent {
   @@index([type])
   @@index([status])
   @@index([createdAt])
+}
+
+model BolnaExecution {
+  id                  String   @id @default(cuid())
+  executionId         String   @unique
+  agentId             String?
+  agentVersionId      String?
+  batchId             String?
+  status              String
+  terminationReason   String?
+  errorMessage        String?
+  userNumber          String?
+  agentNumber         String?
+  callType            String?
+  provider            String?
+  providerCallId      String?
+  recordingUrl        String?
+  conversationDuration Float?
+  totalCost           Float?
+  costBreakdown       Json?
+  transcript          String?
+  summary             String?
+  extractedData       Json?
+  nodeExtractedData   Json?
+  telephonyData       Json?
+  occurredAt          DateTime?
+  bolnaCreatedAt      DateTime?
+  bolnaUpdatedAt      DateTime?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  events              BolnaWebhookEvent[]
+  call                Call?
+
+  @@index([status])
+  @@index([userNumber])
+  @@index([agentId])
+  @@index([createdAt])
+}
+
+model BolnaWebhookEvent {
+  id            String   @id @default(cuid())
+  dedupeKey     String   @unique
+  executionId   String
+  eventType     String?
+  status        String?
+  sourceIp      String?
+  payload       Json
+  headers       Json?
+  receivedAt    DateTime @default(now())
+  processedAt   DateTime?
+  failedAt      DateTime?
+  errorMessage  String?
+
+  execution     BolnaExecution @relation(fields: [executionId], references: [executionId], onDelete: Cascade)
+
+  @@index([executionId])
+  @@index([status])
+  @@index([receivedAt])
 }

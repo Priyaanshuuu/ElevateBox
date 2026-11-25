@@ -124,11 +124,13 @@ If that value was ever a real credential, it must be **rotated**, because removi
 ## Progress
 
 - **Step 0:** complete — LiveKit frozen and migration inventory recorded.
-- **Step 1:** offline gate complete — see `05-step1-bolna-foundation.md`. The live `GET /user/me` check still needs a real `BOLNA_API_KEY`.
+- **Step 1:** complete — see `05-step1-bolna-foundation.md`. Both offline evals and the live `GET /user/me` smoke passed.
+- **Step 2:** complete — see `06-step2-webhook-normalization.md`. Durable webhook intake, idempotency, terminal-status guards, replay evals, and corrected Bolna-compatible webhook security (URL token + source IP allowlist + execution verification) passed.
+- **Step 3:** complete — see `07-step3-agent-config-versioning.md`. Deterministic agent config, immutable versions, pinned call requests, multilingual/VAD baseline, and secret-safe API evals passed.
 
 ## Next step
 
-Complete the Step 1 live smoke with a real Bolna credential, then start Step 2.
+Continue with Step 4 — qualification/extraction and summary evals against a pinned, non-live agent version.
 
 Gate for Step 1:
 
