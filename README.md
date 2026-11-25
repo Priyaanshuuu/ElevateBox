@@ -1,5 +1,7 @@
 AI Voice Sales Agent
 
+> **Migration status:** ElevateBox is moving from LiveKit Agents to **Bolna** as the primary voice runtime. `my-agent/` is frozen as a legacy/rollback reference. See `docs/04-bolna-migration-inventory.md` for the migration inventory and gates.
+
 An AI-powered outbound voice agent that calls a potential customer, conducts a natural sales conversation for an e-commerce website, understands the customer's requirements and buying intent, and triggers real-world automations during and after the call.
 
 What this project does
@@ -63,7 +65,9 @@ Generate a contextual summary from the conversation.
 
 Send the post-call context and required personal/professional material through WhatsApp.
 
-Architecture
+Architecture (legacy LiveKit implementation — superseded by the Bolna migration)
+
+The diagram below documents the original design. The target architecture is documented in `docs/04-bolna-migration-inventory.md`.
 
                          ┌─────────────────┐
                          │   Telephony     │
@@ -171,6 +175,8 @@ Log the lead
 Follow up appropriately
 
 Technology Stack
+
+> The stack below describes the original LiveKit implementation and is preserved as historical context. The current target is Bolna-first; see `docs/04-bolna-migration-inventory.md`.
 
 Frontend / Platform
 
@@ -346,6 +352,7 @@ docs/03-tradeoffs.md
 
 Status
 
-🚧 In development
+🔄 Bolna migration in progress
 
-The first milestone is to establish a reliable outbound phone call with a two-way AI voice conversation. Subsequent milestones add RAG, lead qualification, mid-call WhatsApp automation, callback scheduling, and post-call follow-up.
+Step 0 is complete: the LiveKit agent is frozen and the migration inventory is recorded in `docs/04-bolna-migration-inventory.md`. The next milestone is a Bolna API client foundation with `GET /user/me` smoke verification.
+

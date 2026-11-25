@@ -1,5 +1,7 @@
 # Technology Stack and Why
 
+> **Historical note:** This document describes the original LiveKit-based stack. It is preserved for context. The current direction is Bolna-first; see `04-bolna-migration-inventory.md`.
+
 ## Stack Overview
 
 | Layer | Technology | Why |

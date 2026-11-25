@@ -1,5 +1,7 @@
 # Architectural Trade-offs
 
+> **Historical note:** These trade-offs describe the original LiveKit-based design. They are preserved for context. Superseding decisions are tracked in `04-bolna-migration-inventory.md`.
+
 ## 1. LiveKit vs Building the Voice Pipeline Directly
 
 ### Decision

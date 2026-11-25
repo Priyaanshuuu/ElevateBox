@@ -134,4 +134,3 @@ model AutomationEvent {
   @@index([status])
   @@index([createdAt])
 }
-// aero_live_bLtnM9By23agAoqCUnQ2YpQP8ahu1clDd5QqcwCdEg4

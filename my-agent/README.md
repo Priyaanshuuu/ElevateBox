@@ -1,3 +1,6 @@
+> [!WARNING]
+> **LEGACY / FROZEN MODULE.** During the Bolna migration, do not add new features here. This directory is preserved as a rollback and behavioral reference only. See `../docs/04-bolna-migration-inventory.md`.
+
 <a href="https://livekit.io/">
   <img src="./.github/assets/livekit-mark.png" alt="LiveKit logo" width="100" height="100">
 </a>

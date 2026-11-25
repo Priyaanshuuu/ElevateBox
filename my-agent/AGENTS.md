@@ -1,5 +1,7 @@
 # AGENTS.md
 
+> **LEGACY / FROZEN MODULE.** This project is preserved as a rollback and behavioral reference while ElevateBox migrates to Bolna. Do not add new features here. Critical rollback fixes require explicit approval and must be recorded in `../docs/04-bolna-migration-inventory.md`.
+
 This is a LiveKit Agents project. LiveKit Agents is a Node.js SDK for building voice AI agents. This project is intended to be used with LiveKit Cloud. See @README.md for more about the rest of the LiveKit ecosystem.
 
 The following is a guide for working with this project.
