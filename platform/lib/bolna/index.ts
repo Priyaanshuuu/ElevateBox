@@ -404,3 +404,14 @@ export type {
   ReliabilityGateResult,
   ReliabilityMetrics,
 } from "./reliability-gate.ts";
+export {
+  ROLLBACK_DRILL_CHECKS,
+  runRollbackDrill,
+} from "./rollback-drill.ts";
+export type {
+  RollbackDrillCheck,
+  RollbackDrillCheckName,
+  RollbackDrillInput,
+  RollbackDrillMetrics,
+  RollbackDrillResult,
+} from "./rollback-drill.ts";
