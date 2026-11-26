@@ -49,3 +49,8 @@ yarn-error.log*
 next-env.d.ts
 
 /generated/prisma
+
+# Attribution is intentionally tracked, not ignored:
+#   lib/attribution.ts, app/showcase/page.tsx, and the root NOTICE carry the
+#   author credit and are guarded by tests/showcase-attribution.test.ts.
+#   gitignore only hides files from git; it cannot protect tracked source.

@@ -1,4 +1,11 @@
 import Link from "next/link";
+import {
+  ATTRIBUTION,
+  attributionEmailHref,
+  attributionLine,
+} from "../../lib/attribution.ts";
+import { FauxPane } from "./faux-pane.tsx";
+import { SetupFlow } from "./setup-flow.tsx";
 import "./showcase.css";
 
 export const metadata = {
@@ -95,6 +102,7 @@ export default function ShowcasePage() {
         </Link>
         <nav aria-label="Page sections">
           <a href="#features">What it does</a>
+          <a href="#setup">Make it yours</a>
           <Link href="/">Open dashboard <span aria-hidden="true">↗</span></Link>
         </nav>
       </header>
@@ -160,6 +168,8 @@ export default function ShowcasePage() {
               ))}
             </div>
           </div>
+
+          <SetupFlow />
         </section>
 
         <section className="showcase-closer">
@@ -170,8 +180,48 @@ export default function ShowcasePage() {
       </main>
 
       <footer className="showcase-footer">
-        <span>Voice Sales</span>
-        <span>ElevateBox · internal operations</span>
+        <div className="footer-cta">
+          <div className="footer-cta-main">
+            <p className="footer-eyebrow">Voice Sales · ElevateBox</p>
+            <h2>Let&apos;s make<br />the next call<br />count.</h2>
+          </div>
+          <div className="footer-cta-side">
+            <p>Mesmerize your pipeline. Grow the business. Voice Sales makes it happen.</p>
+            <Link className="footer-cta-button" href="/">Open the dashboard <span aria-hidden="true">→</span></Link>
+          </div>
+        </div>
+        <div className="footer-columns">
+          <div className="footer-column">
+            <span className="footer-column-label">Quick links</span>
+            <a href="#features">What it does</a>
+            <a href="#setup">Make it yours</a>
+            <Link href="/">Dashboard</Link>
+            <Link href="/leads">Leads</Link>
+            <Link href="/executions">Executions</Link>
+          </div>
+          <div className="footer-column">
+            <span className="footer-column-label">Contact</span>
+            <a href={attributionEmailHref}>{ATTRIBUTION.email}</a>
+            <div className="footer-social">
+              <a href={ATTRIBUTION.linkedin} target="_blank" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>
+              <a href={ATTRIBUTION.x} target="_blank" rel="noreferrer">X <span aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+          <div className="footer-column">
+            <span className="footer-column-label">Built by</span>
+            <p className="footer-credit">{ATTRIBUTION.author}</p>
+            <p className="footer-credit-note">{ATTRIBUTION.project}</p>
+          </div>
+        </div>
+        <div className="footer-marquee" aria-hidden="true">
+          <div className="footer-marquee-track">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <span key={index}>
+                Built by {attributionLine} ·&nbsp;
+              </span>
+            ))}
+          </div>
+        </div>
       </footer>
     </div>
   );
@@ -207,38 +257,6 @@ function HeroPane() {
             <div className="hero-pane-row"><span className="hero-pane-bar w58" /><span className="hero-pane-bar w34" /><span className="hero-pane-bar w20" /></div>
             <div className="hero-pane-row"><span className="hero-pane-bar w66" /><span className="hero-pane-bar w44" /><span className="hero-pane-bar w28" /></div>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FauxPane({
-  label,
-  rows,
-  bars,
-}: {
-  label: string;
-  rows: [string, string][];
-  bars: number[];
-}) {
-  return (
-    <div className="faux-pane">
-      <div className="faux-pane-chrome">
-        <span className="faux-pane-dots"><i /><i /></span>
-        <span>{label}</span>
-      </div>
-      <div className="faux-pane-body">
-        {rows.map(([name, value], index) => (
-          <div className="faux-pane-row" key={name}>
-            <span className="faux-pane-name">{name}</span>
-            <span className="faux-pane-value">{value}</span>
-            <span className="faux-pane-bar" style={{ width: `${bars[index]}%` }} />
-          </div>
-        ))}
-        <div className="faux-pane-row quiet">
-          <span className="faux-pane-bar" style={{ width: `${bars[2]}%` }} />
-          <span className="faux-pane-bar" style={{ width: `${bars[3]}%` }} />
         </div>
       </div>
     </div>

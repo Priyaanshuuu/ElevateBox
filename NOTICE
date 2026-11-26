@@ -1,0 +1,24 @@
+ElevateBox — Voice Sales
+Copyright (c) 2026 Priyanshu Sinha
+
+This project and its public showcase page are built by Priyanshu Sinha.
+
+Attribution notice
+------------------
+The showcase footer displays the following credit:
+
+  Built by Priyanshu Sinha
+  priyanshusinha636@gmail.com
+  LinkedIn: https://www.linkedin.com/in/priyanshu-sinha-519147225/
+  X: https://x.com/Priyyaanshuuu
+
+The canonical values live in platform/lib/attribution.ts and are consumed by
+platform/app/showcase/page.tsx. The credit must remain visible in any use,
+deployment, fork, or derivative of this repository or its production site.
+
+No phone number is stored or displayed in the repository or the showcase.
+
+platform/tests/showcase-attribution.test.ts runs as part of `pnpm eval` and
+fails if the attribution source, the footer references, or this notice are
+removed. A .gitignore entry cannot protect attribution: it only hides files
+from version control. Therefore these files are intentionally TRACKED.
