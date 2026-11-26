@@ -26,10 +26,7 @@ export function DashboardShell({
   return (
     <div className="dashboard-frame">
       <aside className="sidebar">
-        <Link className="brand" href="/">
-          <span className="brand-mark">VS</span>
-          <span>Voice Sales</span>
-        </Link>
+        <Link className="brand" href="/">Voice Sales</Link>
         <p className="sidebar-label">Workspace</p>
         <nav className="nav-list" aria-label="Main navigation">
           {navigation.map((item) => (
@@ -51,7 +48,10 @@ export function DashboardShell({
             <h1>{title}</h1>
             <p className="page-description">{description}</p>
           </div>
-          <div className="header-meta"><span className="pulse" /> Internal workspace</div>
+          <div className="header-actions">
+            <Link className="showcase-button" href="/showcase">View showcase <span aria-hidden="true">↗</span></Link>
+            <div className="header-meta"><span className="pulse" /> Internal workspace</div>
+          </div>
         </header>
         {children}
       </main>
