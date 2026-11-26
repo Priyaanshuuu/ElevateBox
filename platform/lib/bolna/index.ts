@@ -415,3 +415,13 @@ export type {
   RollbackDrillMetrics,
   RollbackDrillResult,
 } from "./rollback-drill.ts";
+export {
+  CANARY_PREFLIGHT_ENV_KEYS,
+  runCanaryPreflight,
+} from "./canary-preflight.ts";
+export type {
+  CanaryPreflightCheck,
+  CanaryPreflightCost,
+  CanaryPreflightInput,
+  CanaryPreflightResult,
+} from "./canary-preflight.ts";

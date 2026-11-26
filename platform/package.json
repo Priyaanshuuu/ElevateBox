@@ -26,6 +26,7 @@
     "bolna:trunk:check": "node scripts/bolna-trunk-check.ts",
     "bolna:transcript:gate": "node scripts/bolna-transcript-gate.ts",
     "bolna:canary:run": "node scripts/bolna-canary-run.ts",
+    "bolna:canary:preflight": "node scripts/bolna-canary-preflight.ts",
     "bolna:reliability:gate": "node scripts/bolna-reliability-gate.ts",
     "bolna:rollback:drill": "node scripts/bolna-rollback-drill.ts",
     "postinstall": "prisma generate",
